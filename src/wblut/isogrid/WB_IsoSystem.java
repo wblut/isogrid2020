@@ -79,7 +79,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		YFLIP = true;
 
 	}
-	
+
 	abstract int getNumberOfTriangles();
 
 	final public void setRNGSeed(long seed) {
@@ -138,7 +138,115 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 					}
 				}
 			}
+		}
+		DEFER = false;
+		map();
+	}
 
+	public void sliceIAll(int on, int off) {
+		DEFER = true;
+		for (int i = on; i < I; i += on + off) {
+			clear(i, 0, 0, off, J, K);
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void sliceJAll(int on, int off) {
+		DEFER = true;
+		for (int j = on; j < J; j += on + off) {
+			clear(0, j, 0, I, off, K);
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void sliceKAll(int on, int off) {
+		DEFER = true;
+		for (int k = on; k < K; k += on + off) {
+			clear(0, 0, k, I, J, off);
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void sliceIBlocks(float chance, int on, int off, int di, int dj, int dk) {
+		boolean[] layer = new boolean[I];
+		for (int i = 0; i < I; i += on + off) {
+			for (int l = 0; l < on; l++) {
+				if (i + l < I) {
+					layer[i + l] = true;
+				}
+			}
+		}
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						for (int ci = 0; ci < di; ci++) {
+							if (i + ci < I && !layer[i + ci]) {
+								clear(i + ci, j, k, 1, dj, dk);
+							}
+						}
+					}
+				}
+			}
+		}
+		DEFER = false;
+		map();
+	}
+	
+	
+	public void sliceJBlocks(float chance, int on, int off, int di, int dj, int dk) {
+		boolean[] layer = new boolean[J];
+		for (int j = 0; j < J; j += on + off) {
+			for (int l = 0; l < on; l++) {
+				if (j + l < J) {
+					layer[j + l] = true;
+				}
+			}
+		}
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						for (int cj = 0; cj < dj; cj++) {
+							if (j + cj < J && !layer[j + cj]) {
+								clear(i , j+cj, k, di, 1, dk);
+							}
+						}
+					}
+				}
+			}
+		}
+		DEFER = false;
+		map();
+	}
+	
+	public void sliceKBlocks(float chance, int on, int off, int di, int dj, int dk) {
+		boolean[] layer = new boolean[K];
+		for (int k = 0; k < K; k += on + off) {
+			for (int l = 0; l < on; l++) {
+				if (k + l < K) {
+					layer[k + l] = true;
+				}
+			}
+		}
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						for (int ck = 0; ck < dk; ck++) {
+							if (k + ck < K && !layer[k + ck]) {
+								clear(i , j,k+ck, di, dj, 1);
+							}
+						}
+					}
+				}
+			}
 		}
 		DEFER = false;
 		map();
@@ -316,8 +424,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 			}
 		}
 	}
-	
-	
+
 	final public void drawTriangleGrid(double radius) {
 		double[] center = getGridCoordinates(1, -1);
 		int limit = (int) (2.0 * radius
@@ -330,7 +437,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 					center = getGridCoordinates(q, r);
 					if (Math.sqrt((center[0] - centerX) * (center[0] - centerX)
 							+ (center[1] - centerY) * (center[1] - centerY)) <= radius) {
-						for(int f=0;f<getNumberOfTriangles();f++) {
+						for (int f = 0; f < getNumberOfTriangles(); f++) {
 							drawTriangle(center, f);
 						}
 					}
@@ -444,7 +551,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
 				if (cell.orientation[f] > -1) {
 					home.beginShape(PConstants.TRIANGLES);
-					home.fill(colors[cell.palette[f] * ((getNumberOfTriangles()==3)?3:10) + cell.orientation[f]]);
+					home.fill(colors[cell.palette[f] * ((getNumberOfTriangles() == 3) ? 3 : 10) + cell.orientation[f]]);
 					triVertices(center, f);
 
 					home.endShape();
