@@ -6,8 +6,8 @@ public class WB_IsoSystem36 extends WB_IsoSystem<WB_IsoHexGrid36> {
 
 	boolean DUAL;
 
-	public WB_IsoSystem36(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,WB_IsoHexGrid36 grid, PApplet home) {
-		super(L,I,J,K,centerX,centerY,colors,seed,grid,home);
+	public WB_IsoSystem36(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed, PApplet home) {
+		super(L,I,J,K,centerX,centerY,colors,seed,home);
 		DUAL=false;
 	}
 
@@ -17,7 +17,10 @@ public class WB_IsoSystem36 extends WB_IsoSystem<WB_IsoHexGrid36> {
 
 	}
 	
-	@Override
+	void setGrid() {
+		grid=new WB_IsoHexGrid36();
+	}
+	
 	int getNumberOfTriangles() {
 		return 36;
 	}

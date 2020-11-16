@@ -7,15 +7,21 @@ import processing.core.PApplet;
 public class WB_IsoSystem6 extends WB_IsoSystem<WB_IsoHexGrid6> {
 
 
-	public WB_IsoSystem6(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,WB_IsoHexGrid6 grid, PApplet home) {
-		super(L,I,J,K,centerX,centerY,colors,seed,grid,home);
+	public WB_IsoSystem6(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed, PApplet home) {
+		super(L,I,J,K,centerX,centerY,colors,seed,home);
 	}
 
 	public WB_IsoSystem6(WB_IsoSystem6 iso) {
 		super(iso);
 	}
 	
+	void setGrid() {
+		grid=new WB_IsoHexGrid6();
+	}
 	
+	int getNumberOfTriangles() {
+		return 6;
+	}	
 	public void mapVoxelsToHexGrid() {
 		grid.clear();
 		int id=0;
@@ -34,10 +40,7 @@ public class WB_IsoSystem6 extends WB_IsoSystem<WB_IsoHexGrid6> {
 		grid.collectLines();
 	}
 
-	@Override
-	int getNumberOfTriangles() {
-		return 6;
-	}
+
 
 
 	

@@ -29,7 +29,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	}
 
 	public WB_IsoSystem(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
-			WB_IsoHexGrid grid, PApplet home) {
+			PApplet home) {
 		randomGen = RandomSource.create(RandomSource.MT);
 		state = randomGen.saveState();
 		this.home = home;
@@ -44,12 +44,13 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		this.centerY = centerY;
 		this.cubes = new WB_CubeGrid(this.I, this.J, this.K);
 		this.seed = seed;
-		this.grid = grid;
+		setGrid();
 		set(0, 0, 0, I, J, K);
 		mapVoxelsToHexGrid();
 		DEFER = false;
 		GLOBALDEFER = false;
 		YFLIP = true;
+		
 	}
 
 	public WB_IsoSystem(WB_IsoSystem<IHG> iso) {
@@ -79,6 +80,8 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		YFLIP = true;
 
 	}
+	
+	abstract void setGrid();
 
 	abstract int getNumberOfTriangles();
 
