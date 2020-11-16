@@ -258,35 +258,130 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		DEFER = true;
 		for (int j = stepj; j < J; j += stepj) {
 			for (int k = stepk; k < K; k += stepk) {
-				clear(0, j - rj, k - rk, I, 2*rj, 2*rk);
-			}
-		}
-		DEFER = false;
-		map();
-	}
-	
-	public void perforateJAll(int stepi, int stepk, int ri, int rk) {
-		DEFER = true;
-		for (int i = stepi; i < I; i += stepi) {
-			for (int k = stepk; k < K; k += stepk) {
-				clear(i-ri,0,  k - rk, 2*ri, J, 2*rk);
-			}
-		}
-		DEFER = false;
-		map();
-	}
-	
-	public void perforateKAll(int stepi, int stepj, int ri, int rj) {
-		DEFER = true;
-		for (int i = stepi; i < I; i += stepi) {
-			for (int j = stepj; j < J; j += stepj) {
-				clear(i-ri,j-rj,  0, 2*ri, 2*rj, K);
+				clear(0, j - rj, k - rk, I, 2 * rj, 2 * rk);
 			}
 		}
 		DEFER = false;
 		map();
 	}
 
+	public void perforateJAll(int stepi, int stepk, int ri, int rk) {
+		DEFER = true;
+		for (int i = stepi; i < I; i += stepi) {
+			for (int k = stepk; k < K; k += stepk) {
+				clear(i - ri, 0, k - rk, 2 * ri, J, 2 * rk);
+			}
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void perforateKAll(int stepi, int stepj, int ri, int rj) {
+		DEFER = true;
+		for (int i = stepi; i < I; i += stepi) {
+			for (int j = stepj; j < J; j += stepj) {
+				clear(i - ri, j - rj, 0, 2 * ri, 2 * rj, K);
+			}
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void perforateIBlocks(float chance, int stepj, int stepk, int rj, int rk, int di, int dj, int dk) {
+		boolean[][] column = new boolean[J][K];
+		for (int j = stepj; j < J; j += stepj) {
+			for (int k = stepk; k < K; k += stepk) {
+				for (int cj = -rj; cj <= rj; cj++) {
+					for (int ck = -rk; ck <= rk; ck++) {
+						if (j + cj >= 0 && j + cj < J && k + ck >= 0 && k + ck < K)
+							column[j + cj][k + ck] = true;
+					}
+				}
+			}
+		}
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						for (int cj = 0; cj < dj; cj++) {
+							for (int ck = 0; ck <dk; ck++) {
+								if (j + cj >= 0 && j + cj < J && k + ck >= 0 && k + ck < K && column[j + cj][k + ck]) {
+									clear(i, j + cj, k + ck, di, 1, 1);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		DEFER = false;
+		map();
+	}
+	
+	public void perforateJBlocks(float chance, int stepi, int stepk, int ri, int rk, int di, int dj, int dk) {
+		boolean[][] column = new boolean[I][K];
+		for (int i = stepi; i < I; i += stepi) {
+			for (int k = stepk; k < K; k += stepk) {
+				for (int ci = -ri; ci <= ri; ci++) {
+					for (int ck = -rk; ck <= rk; ck++) {
+						if (i + ci >= 0 && i + ci < I && k + ck >= 0 && k + ck < K)
+							column[i + ci][k + ck] = true;
+					}
+				}
+			}
+		}
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						for (int ci = 0; ci < di; ci++) {
+							for (int ck = 0; ck <dk; ck++) {
+								if (i + ci >= 0 && i + ci < I && k + ck >= 0 && k + ck < K && column[i + ci][k + ck]) {
+									clear(i+ci, j , k + ck, 1, dj, 1);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		DEFER = false;
+		map();
+	}
+	
+	public void perforateKBlocks(float chance, int stepi, int stepj, int ri, int rj, int di, int dj, int dk) {
+		boolean[][] column = new boolean[I][J];
+		for (int i = stepi; i < I; i += stepi) {
+			for (int j = stepj; j < J; j += stepj) {
+				for (int ci = -ri; ci <= ri; ci++) {
+					for (int cj = -rj; cj <= rj; cj++) {
+						if (i + ci >= 0 && i + ci < I && j + cj >= 0 && j + cj <J)
+							column[i + ci][j + cj] = true;
+					}
+				}
+			}
+		}
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						for (int ci = 0; ci < di; ci++) {
+							for (int cj = 0; cj <dj; cj++) {
+								if (i + ci >= 0 && i + ci < I && j + cj >= 0 && j + cj < J && column[i + ci][j + cj]) {
+									clear(i+ci,  j + cj,k, 1, 1, dk);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		DEFER = false;
+		map();
+	}
 
 	public void refresh() {
 		mapVoxelsToHexGrid();
