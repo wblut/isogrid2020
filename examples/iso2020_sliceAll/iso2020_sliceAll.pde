@@ -9,6 +9,7 @@ void setup() {
   
   //layers on, layers off
   iso.sliceIAll( 8, 2);
+  iso.sliceJAll( 16, 4);
 
 }
 
@@ -20,5 +21,5 @@ void draw() {
   strokeWeight(1);
   iso.drawLines();
   noStroke();
-  iso.drawTriangles();
+  //iso.drawTriangles();
 }
