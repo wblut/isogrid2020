@@ -50,7 +50,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		DEFER = false;
 		GLOBALDEFER = false;
 		YFLIP = true;
-		
+
 	}
 
 	public WB_IsoSystem(WB_IsoSystem<IHG> iso) {
@@ -80,7 +80,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		YFLIP = true;
 
 	}
-	
+
 	abstract void setGrid();
 
 	abstract int getNumberOfTriangles();
@@ -199,8 +199,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		DEFER = false;
 		map();
 	}
-	
-	
+
 	public void sliceJBlocks(float chance, int on, int off, int di, int dj, int dk) {
 		boolean[] layer = new boolean[J];
 		for (int j = 0; j < J; j += on + off) {
@@ -217,7 +216,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 					if (random(1.0) < chance) {
 						for (int cj = 0; cj < dj; cj++) {
 							if (j + cj < J && !layer[j + cj]) {
-								clear(i , j+cj, k, di, 1, dk);
+								clear(i, j + cj, k, di, 1, dk);
 							}
 						}
 					}
@@ -227,7 +226,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		DEFER = false;
 		map();
 	}
-	
+
 	public void sliceKBlocks(float chance, int on, int off, int di, int dj, int dk) {
 		boolean[] layer = new boolean[K];
 		for (int k = 0; k < K; k += on + off) {
@@ -244,7 +243,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 					if (random(1.0) < chance) {
 						for (int ck = 0; ck < dk; ck++) {
 							if (k + ck < K && !layer[k + ck]) {
-								clear(i , j,k+ck, di, dj, 1);
+								clear(i, j, k + ck, di, dj, 1);
 							}
 						}
 					}
@@ -254,6 +253,40 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		DEFER = false;
 		map();
 	}
+
+	public void perforateIAll(int stepj, int stepk, int rj, int rk) {
+		DEFER = true;
+		for (int j = stepj; j < J; j += stepj) {
+			for (int k = stepk; k < K; k += stepk) {
+				clear(0, j - rj, k - rk, I, 2*rj, 2*rk);
+			}
+		}
+		DEFER = false;
+		map();
+	}
+	
+	public void perforateJAll(int stepi, int stepk, int ri, int rk) {
+		DEFER = true;
+		for (int i = stepi; i < I; i += stepi) {
+			for (int k = stepk; k < K; k += stepk) {
+				clear(i-ri,0,  k - rk, 2*ri, J, 2*rk);
+			}
+		}
+		DEFER = false;
+		map();
+	}
+	
+	public void perforateKAll(int stepi, int stepj, int ri, int rj) {
+		DEFER = true;
+		for (int i = stepi; i < I; i += stepi) {
+			for (int j = stepj; j < J; j += stepj) {
+				clear(i-ri,j-rj,  0, 2*ri, 2*rj, K);
+			}
+		}
+		DEFER = false;
+		map();
+	}
+
 
 	public void refresh() {
 		mapVoxelsToHexGrid();
