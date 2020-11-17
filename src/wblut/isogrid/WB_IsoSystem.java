@@ -305,7 +305,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				for (int k = 0; k < K; k += dk) {
 					if (random(1.0) < chance) {
 						for (int cj = 0; cj < dj; cj++) {
-							for (int ck = 0; ck <dk; ck++) {
+							for (int ck = 0; ck < dk; ck++) {
 								if (j + cj >= 0 && j + cj < J && k + ck >= 0 && k + ck < K && column[j + cj][k + ck]) {
 									clear(i, j + cj, k + ck, di, 1, 1);
 								}
@@ -318,7 +318,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		DEFER = false;
 		map();
 	}
-	
+
 	public void perforateJBlocks(float chance, int stepi, int stepk, int ri, int rk, int di, int dj, int dk) {
 		boolean[][] column = new boolean[I][K];
 		for (int i = stepi; i < I; i += stepi) {
@@ -337,9 +337,9 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				for (int k = 0; k < K; k += dk) {
 					if (random(1.0) < chance) {
 						for (int ci = 0; ci < di; ci++) {
-							for (int ck = 0; ck <dk; ck++) {
+							for (int ck = 0; ck < dk; ck++) {
 								if (i + ci >= 0 && i + ci < I && k + ck >= 0 && k + ck < K && column[i + ci][k + ck]) {
-									clear(i+ci, j , k + ck, 1, dj, 1);
+									clear(i + ci, j, k + ck, 1, dj, 1);
 								}
 							}
 						}
@@ -350,14 +350,14 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		DEFER = false;
 		map();
 	}
-	
+
 	public void perforateKBlocks(float chance, int stepi, int stepj, int ri, int rj, int di, int dj, int dk) {
 		boolean[][] column = new boolean[I][J];
 		for (int i = stepi; i < I; i += stepi) {
 			for (int j = stepj; j < J; j += stepj) {
 				for (int ci = -ri; ci <= ri; ci++) {
 					for (int cj = -rj; cj <= rj; cj++) {
-						if (i + ci >= 0 && i + ci < I && j + cj >= 0 && j + cj <J)
+						if (i + ci >= 0 && i + ci < I && j + cj >= 0 && j + cj < J)
 							column[i + ci][j + cj] = true;
 					}
 				}
@@ -369,12 +369,34 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				for (int k = 0; k < K; k += dk) {
 					if (random(1.0) < chance) {
 						for (int ci = 0; ci < di; ci++) {
-							for (int cj = 0; cj <dj; cj++) {
+							for (int cj = 0; cj < dj; cj++) {
 								if (i + ci >= 0 && i + ci < I && j + cj >= 0 && j + cj < J && column[i + ci][j + cj]) {
-									clear(i+ci,  j + cj,k, 1, 1, dk);
+									clear(i + ci, j + cj, k, 1, 1, dk);
 								}
 							}
 						}
+					}
+				}
+			}
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void invertAll() {
+		DEFER = true;
+		not(0, 0, 0, I, J, K);
+		DEFER = false;
+		map();
+	}
+
+	public void invertBlocks(double chance, int di, int dj, int dk) {
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						not(i, j, k, di, dj, dk);
 					}
 				}
 			}
