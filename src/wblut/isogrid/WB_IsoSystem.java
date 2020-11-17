@@ -723,7 +723,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		DEFER = false;
 		map();
 	}
-	
+
 	public void edgeBlocks(double chance, int di, int dj, int dk) {
 		DEFER = true;
 		for (int i = 0; i < I; i += di) {
@@ -757,6 +757,158 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		}
 	}
 
+	public void openIAll() {
+		for (int j = 0; j < J; j++) {
+			for (int k = 0; k < K; k++) {
+				openLeftI(j, k);
+				openRightI(j, k);
+			}
+		}
+		map();
+	}
+
+	public void openJAll() {
+		for (int i = 0; i < I; i++) {
+			for (int k = 0; k < K; k++) {
+				openLeftJ(i, k);
+				openRightJ(i, k);
+			}
+		}
+		map();
+	}
+
+	public void openKAll() {
+		for (int j = 0; j < J; j++) {
+			for (int i = 0; i < I; i++) {
+				openLeftK(i, j);
+				openRightK(i, j);
+			}
+		}
+		map();
+	}
+
+	public void openIBlocks(double chance, int dj, int dk) {
+		for (int j = 0; j < J; j += dj) {
+			for (int k = 0; k < K; k += dk) {
+				if (random(1.0) < chance) {
+					for (int cj = 0; cj < dj; cj++) {
+						for (int ck = 0; ck < dk; ck++) {
+							openLeftI(j + cj, k + ck);
+							openRightI(j + cj, k + ck);
+						}
+					}
+				}
+			}
+		}
+		map();
+	}
+
+	
+	
+	public void openJBlocks(double chance, int di, int dk) {
+		for (int i = 0; i < I; i += di) {
+			for (int k = 0; k < K; k += dk) {
+				if (random(1.0) < chance) {
+					for (int ci = 0; ci < di; ci++) {
+						for (int ck = 0; ck < dk; ck++) {
+							openLeftJ(i + ci, k + ck);
+							openRightJ(i + ci, k + ck);
+						}
+					}
+				}
+			}
+		}
+		map();
+	}	
+	
+	
+	public void openKBlocks(double chance, int di, int dj) {
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				if (random(1.0) < chance) {
+					for (int ci = 0; ci < di; ci++) {
+						for (int cj = 0; cj < dj; cj++) {
+							openLeftJ(i + ci, j + cj);
+							openRightJ(i + ci, j + cj);
+						}
+					}
+				}
+			}
+		}
+		map();
+	}
+	
+	void openLeftI(int j, int k) {
+		int i = 0;
+		while (i < I && !cubes.get(i, j, k)) {
+			i++;
+		}
+		if (i == I)
+			return;
+		if (i == I - 1 || !cubes.get(i + 1, j, k))
+			cubes.set(i, j, k, false);
+
+	}
+
+	void openRightI(int j, int k) {
+		int i = I - 1;
+		while (i >= 0 && !cubes.get(i, j, k)) {
+			i--;
+		}
+		if (i == -1)
+			return;
+		if (i == 0 || !cubes.get(i - 1, j, k))
+			cubes.set(i, j, k, false);
+
+	}
+
+	void openLeftJ(int i, int k) {
+		int j = 0;
+		while (j < J && !cubes.get(i, j, k)) {
+			j++;
+		}
+		if (j == J)
+			return;
+		if (j == J - 1 || !cubes.get(i, j + 1, k))
+			cubes.set(i, j, k, false);
+
+	}
+
+	void openRightJ(int i, int k) {
+		int j = J - 1;
+		while (j >= 0 && !cubes.get(i, j, k)) {
+			j--;
+		}
+		if (j == -1)
+			return;
+		if (j == 0 || !cubes.get(i, j - 1, k))
+			cubes.set(i, j, k, false);
+
+	}
+
+	void openLeftK(int i, int j) {
+		int k = 0;
+		while (k < K && !cubes.get(i, j, k)) {
+			k++;
+		}
+		if (k == K)
+			return;
+		if (k == K - 1 || !cubes.get(i, j, k + 1))
+			cubes.set(i, j, k, false);
+
+	}
+
+	void openRightK(int i, int j) {
+		int k = K - 1;
+		while (k >= 0 && !cubes.get(i, j, k)) {
+			k--;
+		}
+		if (k == -1)
+			return;
+		if (k == 0 || !cubes.get(i, j, k - 1))
+			cubes.set(i, j, k, false);
+
+	}
 
 	public void refresh() {
 		mapVoxelsToHexGrid();

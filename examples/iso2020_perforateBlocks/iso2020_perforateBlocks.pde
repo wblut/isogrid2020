@@ -13,7 +13,7 @@ void setup() {
   iso.perforateJBlocks(0.50, 8, 8, 2, 2,16,16,8);
   //chance, step size I, step size J, hole size I, hole size J, block I, block J, block K
   iso.perforateKBlocks(0.50, 8, 8, 2, 2,16,16,8);
- 
+  iso.wallAll();
 }
 
 void draw() {
