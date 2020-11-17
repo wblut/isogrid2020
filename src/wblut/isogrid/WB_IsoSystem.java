@@ -253,7 +253,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		DEFER = false;
 		map();
 	}
-	
+
 	public void layerIAll(int on, int off) {
 		DEFER = true;
 		for (int i = on; i < I; i += on + off) {
@@ -490,7 +490,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		DEFER = false;
 		map();
 	}
-	
+
 	public void barIAll(int stepj, int stepk, int rj, int rk) {
 		DEFER = true;
 		for (int j = stepj; j < J; j += stepj) {
@@ -621,9 +621,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	}
 
 	public void invertAll() {
-		DEFER = true;
 		not(0, 0, 0, I, J, K);
-		DEFER = false;
 		map();
 	}
 
@@ -641,6 +639,124 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		DEFER = false;
 		map();
 	}
+
+	public void wallAll() {
+		DEFER = true;
+		for (int i = 0; i < I; i++) {
+			for (int j = 0; j < J; j++) {
+				for (int k = 0; k < K; k++) {
+					if (cubes.isWall(i, j, k)) {
+						cubes.setBuffer(i, j, k, true);
+					} else {
+
+						cubes.setBuffer(i, j, k, false);
+					}
+				}
+			}
+		}
+		cubes.swap();
+		DEFER = false;
+		map();
+	}
+
+	public void wallBlocks(double chance, int di, int dj, int dk) {
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						wallOneBlock(i, j, k, di, dj, dk);
+					} else {
+						copyOneBlockToBuffer(i, j, k, di, dj, dk);
+					}
+				}
+			}
+		}
+		cubes.swap();
+		DEFER = false;
+		map();
+	}
+
+	void wallOneBlock(int si, int sj, int sk, int di, int dj, int dk) {
+		for (int i = si; i < si + di; i++) {
+			for (int j = sj; j < sj + dj; j++) {
+				for (int k = sk; k < sk + dk; k++) {
+					if (cubes.isWall(i, j, k)) {
+						cubes.setBuffer(i, j, k, true);
+					} else {
+
+						cubes.setBuffer(i, j, k, false);
+					}
+				}
+			}
+		}
+	}
+
+	void copyOneBlockToBuffer(int si, int sj, int sk, int di, int dj, int dk) {
+		int index;
+		for (int i = si; i < si + di; i++) {
+			for (int j = sj; j < sj + dj; j++) {
+				for (int k = sk; k < sk + dk; k++) {
+					index = index(i, j, k);
+					cubes.setBuffer(index, cubes.get(index));
+
+				}
+			}
+		}
+	}
+
+	public void edgeAll() {
+		DEFER = true;
+		for (int i = 0; i < I; i++) {
+			for (int j = 0; j < J; j++) {
+				for (int k = 0; k < K; k++) {
+					if (cubes.isEdge(i, j, k)) {
+						cubes.setBuffer(i, j, k, true);
+					} else {
+
+						cubes.setBuffer(i, j, k, false);
+					}
+				}
+			}
+		}
+		cubes.swap();
+		DEFER = false;
+		map();
+	}
+	
+	public void edgeBlocks(double chance, int di, int dj, int dk) {
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						edgeOneBlock(i, j, k, di, dj, dk);
+					} else {
+						copyOneBlockToBuffer(i, j, k, di, dj, dk);
+					}
+				}
+			}
+		}
+		cubes.swap();
+		DEFER = false;
+		map();
+	}
+
+	void edgeOneBlock(int si, int sj, int sk, int di, int dj, int dk) {
+		for (int i = si; i < si + di; i++) {
+			for (int j = sj; j < sj + dj; j++) {
+				for (int k = sk; k < sk + dk; k++) {
+					if (cubes.isEdge(i, j, k)) {
+						cubes.setBuffer(i, j, k, true);
+					} else {
+
+						cubes.setBuffer(i, j, k, false);
+					}
+				}
+			}
+		}
+	}
+
 
 	public void refresh() {
 		mapVoxelsToHexGrid();
@@ -948,7 +1064,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 			}
 		}
 	}
-	
+
 	final public void drawTriangles(double I, double J, double K, PImage[] textures) {
 		double[] center;
 		int offsetU, offsetV;
@@ -960,19 +1076,19 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 					home.beginShape(PConstants.TRIANGLES);
 					home.texture(textures[cell.orientation[f]]);
-					
+
 					offsetU = cell.getTriangleUOffset(f);
 					offsetV = cell.getTriangleVOffset(f);
 
 					switch (cell.getTriangleUDirection(f)) {
 					case 0:
 						scaleU = 1.0 / Math.max(1.0, I);
-			
+
 						break;
 
 					case 1:
 						scaleU = 1.0 / Math.max(1.0, J);
-				
+
 						break;
 
 					case 2:
@@ -981,23 +1097,23 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 					default:
 						scaleU = 1.0;
-					
+
 					}
 
 					switch (cell.getTriangleVDirection(f)) {
 					case 0:
 						scaleV = 1.0 / Math.max(1.0, I);
-					
+
 						break;
 
 					case 1:
 						scaleV = 1.0 / Math.max(1.0, J);
-					
+
 						break;
 
 					case 2:
 						scaleV = 1.0 / Math.max(1.0, K);
-						
+
 						break;
 
 					default:
@@ -1005,18 +1121,20 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 					}
 
 					grid.triVertex(home.g, f, 0, center[0], center[1], L, (YFLIP ? -1.0 : 1.0) * L,
-							scaleU * (cell.getTriangleU(f, 0) + offsetU), (YFLIP ? -1.0 : 1.0) * scaleV * (cell.getTriangleV(f, 0) + offsetV));
+							scaleU * (cell.getTriangleU(f, 0) + offsetU),
+							(YFLIP ? -1.0 : 1.0) * scaleV * (cell.getTriangleV(f, 0) + offsetV));
 					grid.triVertex(home.g, f, 1, center[0], center[1], L, (YFLIP ? -1.0 : 1.0) * L,
-							scaleU * (cell.getTriangleU(f, 1) + offsetU), (YFLIP ? -1.0 : 1.0) * scaleV * (cell.getTriangleV(f, 1) + offsetV));
+							scaleU * (cell.getTriangleU(f, 1) + offsetU),
+							(YFLIP ? -1.0 : 1.0) * scaleV * (cell.getTriangleV(f, 1) + offsetV));
 					grid.triVertex(home.g, f, 2, center[0], center[1], L, (YFLIP ? -1.0 : 1.0) * L,
-							scaleU * (cell.getTriangleU(f, 2) + offsetU), (YFLIP ? -1.0 : 1.0) * scaleV * (cell.getTriangleV(f, 2) + offsetV));
+							scaleU * (cell.getTriangleU(f, 2) + offsetU),
+							(YFLIP ? -1.0 : 1.0) * scaleV * (cell.getTriangleV(f, 2) + offsetV));
 
 					home.endShape();
 				}
 			}
 		}
 	}
-
 
 	final public void drawTriangles(double I, double J, double K, PImage[] textures, float ho, float hf, float hr,
 			float zo, float zf, float zo2, float zf2, float oo, float of) {

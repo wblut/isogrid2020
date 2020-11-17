@@ -17,15 +17,15 @@ public interface WB_IsoHexGridData6 {
 
 	static final double[][] triangleUVs = new double[][] {
 
-			{ 0, 1, 1, 0, 1, 1 }, { 0, 0, 1, 0, 1, 1 }, { 0, 0,1, 1, 0, 1 }, { 1, 1, 0, 1, 0, 0 },
+			{ 0, 1, 1, 0, 1, 1 }, { 1, 0, 1, 1, 0, 1 }, { 1, 0,0, 1, 0, 0 }, { 1, 1, 0, 1, 0, 0 },
 			{ 1, 1, 0, 0, 1, 0 }, { 0, 1, 0, 0, 1, 0 } };
 
 	static final int[][] triangleUVDirections = new int[][] {
 
-			{ 2, 1 }, { 2, 0 }, { 2, 0 }, { 0, 1 }, { 0, 1 }, { 2, 1 } };
+			{ 2, 1 }, { 0, 2 }, { 0, 2 }, { 0, 1 }, { 0, 1 }, { 2, 1 } };
 	static final int[][] triangleUVDirectionSigns = new int[][] {
 
-				{-1, 1 }, { -1, -1 }, { -1, -1 }, { 1, 1 }, { 1, 1 }, { -1, 1 } };
+				{-1, 1 }, { 1, -1 }, { 1, -1 }, { 1, 1 }, { 1, 1 }, { -1, 1 } };
 
 
 	static final double c60 = Math.cos(Math.PI / 3.0);

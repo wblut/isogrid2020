@@ -8,10 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-
 public class WB_CubeGrid {
-
-	
 
 	int I, J, K, JK, IJK;
 	boolean[] voxels;
@@ -25,7 +22,7 @@ public class WB_CubeGrid {
 	int[] parts;
 
 	public WB_CubeGrid(int I, int J, int K) {
-		
+
 		this.I = I;
 		this.J = J;
 		this.K = K;
@@ -41,7 +38,7 @@ public class WB_CubeGrid {
 	}
 
 	public WB_CubeGrid(WB_CubeGrid cubes) {
-		
+
 		this.I = cubes.I;
 		this.J = cubes.J;
 		this.K = cubes.K;
@@ -60,7 +57,18 @@ public class WB_CubeGrid {
 
 	}
 
-	
+	public void swap() {
+		swap = buffer;
+		buffer = voxels;
+		voxels = swap;
+	}
+
+	public void paletteSwap() {
+		paletteSwap = paletteBuffer;
+		paletteBuffer = palettes;
+		palettes = paletteSwap;
+	}
+
 	public void fill() {
 		int id = 0;
 		for (int i = 0; i < I; i++) {
@@ -95,6 +103,14 @@ public class WB_CubeGrid {
 		return voxels[index(i, j, k)];
 	}
 
+	public boolean getBuffer(int id) {
+		return buffer[id];
+	}
+
+	public boolean getBuffer(int i, int j, int k) {
+		return buffer[index(i, j, k)];
+	}
+
 	public void set(int id, boolean b) {
 		voxels[id] = b;
 	}
@@ -102,7 +118,15 @@ public class WB_CubeGrid {
 	public void set(int i, int j, int k, boolean b) {
 		voxels[index(i, j, k)] = b;
 	}
-	
+
+	public void setBuffer(int id, boolean b) {
+		buffer[id] = b;
+	}
+
+	public void setBuffer(int i, int j, int k, boolean b) {
+		buffer[index(i, j, k)] = b;
+	}
+
 	public void and(int id, boolean b) {
 		voxels[id] &= b;
 	}
@@ -110,7 +134,7 @@ public class WB_CubeGrid {
 	public void and(int i, int j, int k, boolean b) {
 		voxels[index(i, j, k)] &= b;
 	}
-	
+
 	public void or(int id, boolean b) {
 		voxels[id] |= b;
 	}
@@ -118,7 +142,7 @@ public class WB_CubeGrid {
 	public void or(int i, int j, int k, boolean b) {
 		voxels[index(i, j, k)] |= b;
 	}
-	
+
 	public void xor(int id, boolean b) {
 		voxels[id] ^= b;
 	}
@@ -126,13 +150,13 @@ public class WB_CubeGrid {
 	public void xor(int i, int j, int k, boolean b) {
 		voxels[index(i, j, k)] ^= b;
 	}
-	
+
 	public void not(int id) {
 		voxels[id] = !voxels[id];
 	}
 
 	public void not(int i, int j, int k) {
-		int id=index(i, j, k);
+		int id = index(i, j, k);
 		voxels[id] = !voxels[id];
 	}
 
@@ -144,12 +168,28 @@ public class WB_CubeGrid {
 		return palettes[index(i, j, k)];
 	}
 
+	public int getPaletteBuffer(int id) {
+		return paletteBuffer[id];
+	}
+
+	public int getPaletteBuffer(int i, int j, int k) {
+		return paletteBuffer[index(i, j, k)];
+	}
+
 	public void setPalette(int id, int palette) {
 		palettes[id] = palette;
 	}
 
 	public void setPalette(int i, int j, int k, int palette) {
 		palettes[index(i, j, k)] = palette;
+	}
+
+	public void setPaletteBuffer(int id, int palette) {
+		paletteBuffer[id] = palette;
+	}
+
+	public void setPaletteBuffer(int i, int j, int k, int palette) {
+		paletteBuffer[index(i, j, k)] = palette;
 	}
 
 	public int getPart(int id) {
@@ -346,8 +386,6 @@ public class WB_CubeGrid {
 		}
 
 	}
-	
-	
 
 	private int index(final int i, final int j, final int k, int li, int ui, int lj, int uj, int lk, int uk) {
 		if (i > li - 1 && j > lj - 1 && k > lk - 1 && i < ui && j < uj && k < uk) {
@@ -368,6 +406,63 @@ public class WB_CubeGrid {
 
 	}
 
+	// 6 neighbors
+	public boolean isBulk(int i, int j, int k) {
+		int index = index(i, j, k);
+		if (index == -1 || !get(index))
+			return false;
+		for(int di=-1;di<=1;di++) {
+			for(int dj=-1;dj<=1;dj++) {
+				for(int dk=-1;dk<=1;dk++) {
+					index = index(i + di, j+dj, k+dk);
+					if (index == -1 ||  !get(index))
+						return false;
+				}
+			}
+		}
+		
+		
+		
+		return true;
+	}
 	
+
+
+	
+	public boolean isWall(int i, int j, int k) {
+		int index = index(i, j, k);
+		if (index == -1 || !get(index))
+			return false;
+		return !isBulk(i, j, k);
+	}
+	
+
+	public boolean isEdge(int i, int j, int k) {
+		int index = index(i, j, k);
+		if (index == -1 || !get(index))
+			return false;
+		if(isBulk(i,j,k)) return false;
+		int q = 0;
+		int r = 0;
+		int s = 0;
+
+		if (isWall(i+1,j,k))
+			q++;
+		if (isWall(i-1,j,k))
+			q++;
+		if (isWall(i,j+1,k))
+			r++;
+		if (isWall(i,j-1,k))
+			r++;
+		if (isWall(i,j,k+1))
+			s++;
+		if (isWall(i,j,k-1))
+			s++;
+		int cases=(q==0?1:0)+(r==0?1:0)+(s==0?1:0);
+		return cases!=1;
+		
+		
+				
+	}
 
 }
