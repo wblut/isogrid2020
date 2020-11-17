@@ -253,6 +253,114 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		DEFER = false;
 		map();
 	}
+	
+	public void layerIAll(int on, int off) {
+		DEFER = true;
+		for (int i = on; i < I; i += on + off) {
+			set(i, 0, 0, off, J, K);
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void layerJAll(int on, int off) {
+		DEFER = true;
+		for (int j = on; j < J; j += on + off) {
+			set(0, j, 0, I, off, K);
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void layerKAll(int on, int off) {
+		DEFER = true;
+		for (int k = on; k < K; k += on + off) {
+			set(0, 0, k, I, J, off);
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void layerIBlocks(float chance, int on, int off, int di, int dj, int dk) {
+		boolean[] layer = new boolean[I];
+		for (int i = 0; i < I; i += on + off) {
+			for (int l = 0; l < on; l++) {
+				if (i + l < I) {
+					layer[i + l] = true;
+				}
+			}
+		}
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						for (int ci = 0; ci < di; ci++) {
+							if (i + ci < I && !layer[i + ci]) {
+								set(i + ci, j, k, 1, dj, dk);
+							}
+						}
+					}
+				}
+			}
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void layerJBlocks(float chance, int on, int off, int di, int dj, int dk) {
+		boolean[] layer = new boolean[J];
+		for (int j = 0; j < J; j += on + off) {
+			for (int l = 0; l < on; l++) {
+				if (j + l < J) {
+					layer[j + l] = true;
+				}
+			}
+		}
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						for (int cj = 0; cj < dj; cj++) {
+							if (j + cj < J && !layer[j + cj]) {
+								set(i, j + cj, k, di, 1, dk);
+							}
+						}
+					}
+				}
+			}
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void layerKBlocks(float chance, int on, int off, int di, int dj, int dk) {
+		boolean[] layer = new boolean[K];
+		for (int k = 0; k < K; k += on + off) {
+			for (int l = 0; l < on; l++) {
+				if (k + l < K) {
+					layer[k + l] = true;
+				}
+			}
+		}
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						for (int ck = 0; ck < dk; ck++) {
+							if (k + ck < K && !layer[k + ck]) {
+								set(i, j, k + ck, di, dj, 1);
+							}
+						}
+					}
+				}
+			}
+		}
+		DEFER = false;
+		map();
+	}
 
 	public void perforateIAll(int stepj, int stepk, int rj, int rk) {
 		DEFER = true;
@@ -372,6 +480,135 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 							for (int cj = 0; cj < dj; cj++) {
 								if (i + ci >= 0 && i + ci < I && j + cj >= 0 && j + cj < J && column[i + ci][j + cj]) {
 									clear(i + ci, j + cj, k, 1, 1, dk);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		DEFER = false;
+		map();
+	}
+	
+	public void barIAll(int stepj, int stepk, int rj, int rk) {
+		DEFER = true;
+		for (int j = stepj; j < J; j += stepj) {
+			for (int k = stepk; k < K; k += stepk) {
+				set(0, j - rj, k - rk, I, 2 * rj, 2 * rk);
+			}
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void barJAll(int stepi, int stepk, int ri, int rk) {
+		DEFER = true;
+		for (int i = stepi; i < I; i += stepi) {
+			for (int k = stepk; k < K; k += stepk) {
+				set(i - ri, 0, k - rk, 2 * ri, J, 2 * rk);
+			}
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void barKAll(int stepi, int stepj, int ri, int rj) {
+		DEFER = true;
+		for (int i = stepi; i < I; i += stepi) {
+			for (int j = stepj; j < J; j += stepj) {
+				set(i - ri, j - rj, 0, 2 * ri, 2 * rj, K);
+			}
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void barIBlocks(float chance, int stepj, int stepk, int rj, int rk, int di, int dj, int dk) {
+		boolean[][] column = new boolean[J][K];
+		for (int j = stepj; j < J; j += stepj) {
+			for (int k = stepk; k < K; k += stepk) {
+				for (int cj = -rj; cj <= rj; cj++) {
+					for (int ck = -rk; ck <= rk; ck++) {
+						if (j + cj >= 0 && j + cj < J && k + ck >= 0 && k + ck < K)
+							column[j + cj][k + ck] = true;
+					}
+				}
+			}
+		}
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						for (int cj = 0; cj < dj; cj++) {
+							for (int ck = 0; ck < dk; ck++) {
+								if (j + cj >= 0 && j + cj < J && k + ck >= 0 && k + ck < K && column[j + cj][k + ck]) {
+									set(i, j + cj, k + ck, di, 1, 1);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void barJBlocks(float chance, int stepi, int stepk, int ri, int rk, int di, int dj, int dk) {
+		boolean[][] column = new boolean[I][K];
+		for (int i = stepi; i < I; i += stepi) {
+			for (int k = stepk; k < K; k += stepk) {
+				for (int ci = -ri; ci <= ri; ci++) {
+					for (int ck = -rk; ck <= rk; ck++) {
+						if (i + ci >= 0 && i + ci < I && k + ck >= 0 && k + ck < K)
+							column[i + ci][k + ck] = true;
+					}
+				}
+			}
+		}
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						for (int ci = 0; ci < di; ci++) {
+							for (int ck = 0; ck < dk; ck++) {
+								if (i + ci >= 0 && i + ci < I && k + ck >= 0 && k + ck < K && column[i + ci][k + ck]) {
+									set(i + ci, j, k + ck, 1, dj, 1);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void barKBlocks(float chance, int stepi, int stepj, int ri, int rj, int di, int dj, int dk) {
+		boolean[][] column = new boolean[I][J];
+		for (int i = stepi; i < I; i += stepi) {
+			for (int j = stepj; j < J; j += stepj) {
+				for (int ci = -ri; ci <= ri; ci++) {
+					for (int cj = -rj; cj <= rj; cj++) {
+						if (i + ci >= 0 && i + ci < I && j + cj >= 0 && j + cj < J)
+							column[i + ci][j + cj] = true;
+					}
+				}
+			}
+		}
+		DEFER = true;
+		for (int i = 0; i < I; i += di) {
+			for (int j = 0; j < J; j += dj) {
+				for (int k = 0; k < K; k += dk) {
+					if (random(1.0) < chance) {
+						for (int ci = 0; ci < di; ci++) {
+							for (int cj = 0; cj < dj; cj++) {
+								if (i + ci >= 0 && i + ci < I && j + cj >= 0 && j + cj < J && column[i + ci][j + cj]) {
+									set(i + ci, j + cj, k, 1, 1, dk);
 								}
 							}
 						}
