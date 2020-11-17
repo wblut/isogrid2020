@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import java.util.Map;
 
+import processing.core.PApplet;
 import processing.core.PGraphics;
 
 public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 {
@@ -293,6 +294,17 @@ public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 
 	}
 
 	void point(PGraphics pg, double q, double r, double ox, double oy, double sx, double sy) {
+		pg.point((float) (q / 6.0 * s60 * sx + ox), (float) ((r - q * c60) / 6.0 * sy + oy));
+
+	}
+	
+	void line(PApplet pg, double q1, double r1, double q2, double r2, double ox, double oy, double sx, double sy) {
+		pg.line((float) (q1 / 6.0 * s60 * sx + ox), (float) ((r1 - q1 * c60) / 6.0 * sy + oy),
+				(float) ((q2 / 6.0 * s60 * sx) + ox), (float) ((r2 - q2 * c60) / 6.0 * sy + oy));
+
+	}
+
+	void point(PApplet pg, double q, double r, double ox, double oy, double sx, double sy) {
 		pg.point((float) (q / 6.0 * s60 * sx + ox), (float) ((r - q * c60) / 6.0 * sy + oy));
 
 	}

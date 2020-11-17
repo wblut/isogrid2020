@@ -828,8 +828,8 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				if (random(1.0) < chance) {
 					for (int ci = 0; ci < di; ci++) {
 						for (int cj = 0; cj < dj; cj++) {
-							openLeftJ(i + ci, j + cj);
-							openRightJ(i + ci, j + cj);
+							openLeftK(i + ci, j + cj);
+							openRightK(i + ci, j + cj);
 						}
 					}
 				}
@@ -1129,7 +1129,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	final public void drawLinesSVG() {
 		for (WB_IsoGridLine line : grid.lines) {
 			for (WB_IsoGridSegment segment : line.getSegments()) {
-				grid.line(home.g, segment.getQ1(), segment.getR1(), segment.getQ2(), segment.getR2(), centerX, centerY,
+				grid.line(home, segment.getQ1(), segment.getR1(), segment.getQ2(), segment.getR2(), centerX, centerY,
 						L, (YFLIP ? -1.0 : 1.0) * L);
 			}
 		}
@@ -1168,7 +1168,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	final public void drawOutlinesSVG() {
 		for (WB_IsoGridLine line : grid.outlines) {
 			for (WB_IsoGridSegment segment : line.getSegments()) {
-				grid.line(home.g, segment.getQ1(), segment.getR1(), segment.getQ2(), segment.getR2(), centerX, centerY,
+				grid.line(home, segment.getQ1(), segment.getR1(), segment.getQ2(), segment.getR2(), centerX, centerY,
 						L, (YFLIP ? -1.0 : 1.0) * L);
 
 			}

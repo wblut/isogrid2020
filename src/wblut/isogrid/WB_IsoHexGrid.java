@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
+import processing.core.PApplet;
 import processing.core.PGraphics;
 
 
@@ -177,6 +177,10 @@ public abstract class WB_IsoHexGrid {
 	
 	abstract void point(PGraphics pg, double q, double r, double ox, double oy, double sx, double sy);
 	
+	abstract void line(
+			PApplet pg, double q1, double r1,double q2, double r2, double ox, double oy, double sx, double sy) ;
+	
+	abstract void point(PApplet pg, double q, double r, double ox, double oy, double sx, double sy);
 
 	abstract double[] getGridCoordinates(double q, double r, double ox, double oy, double sx, double sy) ;
 
