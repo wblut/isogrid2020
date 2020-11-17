@@ -753,6 +753,15 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		home.point((float) point2[0], (float) point2[1]);
 	}
 
+	final public void drawHex(int q, int r) {
+		double[] center = getGridCoordinates(q, r);
+		home.beginShape();
+		for (int i = 0; i < 6; i++) {
+			grid.hexVertex(home.g, i, center[0], center[1], L, (YFLIP ? -1.0 : 1.0) * L);
+		}
+		home.endShape(PConstants.CLOSE);
+	}
+
 	final public void drawHexGrid() {
 		for (WB_IsoGridCell cell : grid.cells.values()) {
 			drawHex(cell.getQ(), cell.getR());
@@ -807,6 +816,13 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		}
 	}
 
+	final public void drawTriangle(int q, int r, int f) {
+		double[] center = getGridCoordinates(q, r);
+		home.beginShape();
+		triVertices(center, f);
+		home.endShape(PConstants.CLOSE);
+	}
+
 	final public void drawTriangleGrid() {
 		for (WB_IsoGridCell cell : grid.cells.values()) {
 			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
@@ -834,6 +850,12 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				}
 			}
 		}
+	}
+
+	final public void drawTriangle(double[] center, int f) {
+		home.beginShape();
+		triVertices(center, f);
+		home.endShape(PConstants.CLOSE);
 	}
 
 	final public void drawLinesSVG() {
@@ -898,15 +920,6 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		}
 	}
 
-	final public void drawHex(int q, int r) {
-		double[] center = getGridCoordinates(q, r);
-		home.beginShape();
-		for (int i = 0; i < 6; i++) {
-			grid.hexVertex(home.g, i, center[0], center[1], L, (YFLIP ? -1.0 : 1.0) * L);
-		}
-		home.endShape(PConstants.CLOSE);
-	}
-
 	private void triVertices(double[] center, int f) {
 		grid.triVertex(home.g, f, 0, center[0], center[1], L, (YFLIP ? -1.0 : 1.0) * L);
 		grid.triVertex(home.g, f, 1, center[0], center[1], L, (YFLIP ? -1.0 : 1.0) * L);
@@ -921,19 +934,6 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 	}
 
-	final public void drawTriangle(int q, int r, int f) {
-		double[] center = getGridCoordinates(q, r);
-		home.beginShape();
-		triVertices(center, f);
-		home.endShape(PConstants.CLOSE);
-	}
-
-	final public void drawTriangle(double[] center, int f) {
-		home.beginShape();
-		triVertices(center, f);
-		home.endShape(PConstants.CLOSE);
-	}
-
 	final public void drawTriangles() {
 		double[] center;
 		for (WB_IsoGridCell cell : grid.cells.values()) {
@@ -943,12 +943,80 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 					home.beginShape(PConstants.TRIANGLES);
 					home.fill(colors[cell.palette[f] * ((getNumberOfTriangles() == 3) ? 3 : 10) + cell.orientation[f]]);
 					triVertices(center, f);
+					home.endShape();
+				}
+			}
+		}
+	}
+	
+	final public void drawTriangles(double I, double J, double K, PImage[] textures) {
+		double[] center;
+		int offsetU, offsetV;
+		double scaleU, scaleV;
+		for (WB_IsoGridCell cell : grid.cells.values()) {
+			center = getGridCoordinates(cell.getQ(), cell.getR());
+			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
+				if (cell.orientation[f] > -1) {
+
+					home.beginShape(PConstants.TRIANGLES);
+					home.texture(textures[cell.orientation[f]]);
+					
+					offsetU = cell.getTriangleUOffset(f);
+					offsetV = cell.getTriangleVOffset(f);
+
+					switch (cell.getTriangleUDirection(f)) {
+					case 0:
+						scaleU = 1.0 / Math.max(1.0, I);
+			
+						break;
+
+					case 1:
+						scaleU = 1.0 / Math.max(1.0, J);
+				
+						break;
+
+					case 2:
+						scaleU = 1.0 / Math.max(1.0, K);
+						break;
+
+					default:
+						scaleU = 1.0;
+					
+					}
+
+					switch (cell.getTriangleVDirection(f)) {
+					case 0:
+						scaleV = 1.0 / Math.max(1.0, I);
+					
+						break;
+
+					case 1:
+						scaleV = 1.0 / Math.max(1.0, J);
+					
+						break;
+
+					case 2:
+						scaleV = 1.0 / Math.max(1.0, K);
+						
+						break;
+
+					default:
+						scaleV = 1.0;
+					}
+
+					grid.triVertex(home.g, f, 0, center[0], center[1], L, (YFLIP ? -1.0 : 1.0) * L,
+							scaleU * (cell.getTriangleU(f, 0) + offsetU), (YFLIP ? -1.0 : 1.0) * scaleV * (cell.getTriangleV(f, 0) + offsetV));
+					grid.triVertex(home.g, f, 1, center[0], center[1], L, (YFLIP ? -1.0 : 1.0) * L,
+							scaleU * (cell.getTriangleU(f, 1) + offsetU), (YFLIP ? -1.0 : 1.0) * scaleV * (cell.getTriangleV(f, 1) + offsetV));
+					grid.triVertex(home.g, f, 2, center[0], center[1], L, (YFLIP ? -1.0 : 1.0) * L,
+							scaleU * (cell.getTriangleU(f, 2) + offsetU), (YFLIP ? -1.0 : 1.0) * scaleV * (cell.getTriangleV(f, 2) + offsetV));
 
 					home.endShape();
 				}
 			}
 		}
 	}
+
 
 	final public void drawTriangles(double I, double J, double K, PImage[] textures, float ho, float hf, float hr,
 			float zo, float zf, float zo2, float zf2, float oo, float of) {

@@ -44,8 +44,8 @@ public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 
 			cell.triangleUV[s] = cycle(cycle, triangleUVs[f]);
 			cell.triangleUVDirections[s][0] = triangleUVDirections[f][0];
 			cell.triangleUVDirections[s][1] = triangleUVDirections[f][1];
-			cell.triangleUVOffsets[s][0] = cell.getCube(s)[triangleUVDirections[f][0]];
-			cell.triangleUVOffsets[s][1] = cell.getCube(s)[triangleUVDirections[f][1]];
+			cell.triangleUVOffsets[s][0] = cell.getCube(s)[triangleUVDirections[f][0]]*triangleUVDirectionSigns[f][0]-(triangleUVDirectionSigns[f][0]<0?1:0);
+			cell.triangleUVOffsets[s][1] = cell.getCube(s)[triangleUVDirections[f][1]]*triangleUVDirectionSigns[f][1]-(triangleUVDirectionSigns[f][1]<0?1:0);
 			cell.part[s] = -1;
 		}
 
