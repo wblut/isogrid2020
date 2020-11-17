@@ -1,5 +1,5 @@
 import wblut.isogrid.*;
-WB_IsoSystem36 iso;
+WB_IsoSystem6 iso;
 PImage[] textures;
 void setup() {
   size(800, 800, P3D);
