@@ -55,25 +55,17 @@ public class WB_IsoHexGrid36  extends WB_IsoHexGrid implements WB_IsoHexGridData
 		int palette=params[1];
 		
 		int z = i + j + k;
-		int z3 = z / 3;
-		int ni = i - z3;
-		int nj = j - z3;
-		int nk = k - z3;
-		int layer = ni + nj + nk;
-		while (layer > 1) {
-			ni--;
-			nj--;
-			nk--;
-			layer = ni + nj + nk;
-		}
-		while (layer < -1) {
-			ni++;
-			nj++;
-			nk++;
-			layer = ni + nj + nk;
-		}
 		int q = i - k;
 		int r = j - k;
+		int layer = q+r;
+		while (layer > 1) {
+			layer -= 3;
+		}
+	
+		while (layer < -1) {
+			layer += 3;
+		}
+
 		int ns;
 		switch (layer) {
 
@@ -104,6 +96,55 @@ public class WB_IsoHexGrid36  extends WB_IsoHexGrid implements WB_IsoHexGridData
 		default:
 
 		}
+	}
+public boolean isFull(int q, int r) {
+		
+		int layer = q+r;
+		while (layer > 1) {
+			layer -= 3;
+		}
+	
+		while (layer < -1) {
+			layer += 3;
+		}
+
+		int ns;
+		switch (layer) {
+
+		case 0:
+			long key = getCellHash(q, r);
+			WB_IsoGridCell cell = cells.get(key);
+	       if(cell==null) return false;
+			for (int s = 0; s < 36; s++) {
+				if(cell.getOrientation(s)==-1) return false;
+			}
+			return true;
+			
+		case +1:
+			
+			for (int s = 0; s < 36; s++) {
+				key = getCellHash(q + mapQFromPosOne[s], r + mapRFromPosOne[s]);
+				cell = cells.get(key);
+				if(cell==null) return false;
+				ns = mapTrianglesFromPosOne[s];
+				if(cell.getOrientation(ns)==-1) return false;
+			}
+		    return true;
+
+		case -1:
+			for (int s = 0; s < 36; s++) {
+				key = getCellHash(q + mapQFromNegOne[s], r +mapRFromNegOne[s]);
+				cell = cells.get(key);
+				if(cell==null) return false;
+				ns = mapTrianglesFromNegOne[s];
+				if(cell.getOrientation(ns)==-1) return false;
+			}
+			return true;
+
+		default:
+			return false;
+		}
+		
 	}
 
 

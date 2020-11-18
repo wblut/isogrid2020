@@ -1,5 +1,9 @@
 package wblut.isogrid;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.commons.rng.RandomProviderState;
 import org.apache.commons.rng.RestorableUniformRandomProvider;
 import org.apache.commons.rng.simple.RandomSource;
@@ -29,7 +33,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	}
 
 	public WB_IsoSystem(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
-			PApplet home) {
+			boolean full, PApplet home) {
 		randomGen = RandomSource.create(RandomSource.MT);
 		state = randomGen.saveState();
 		this.home = home;
@@ -45,11 +49,19 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		this.cubes = new WB_CubeGrid(this.I, this.J, this.K);
 		this.seed = seed;
 		setGrid();
-		set(0, 0, 0, I, J, K);
-		mapVoxelsToHexGrid();
+		if (full) {
+			set(0, 0, 0, I, J, K);
+			mapVoxelsToHexGrid();
+		}
 		DEFER = false;
 		GLOBALDEFER = false;
 		YFLIP = true;
+
+	}
+
+	public WB_IsoSystem(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
+			PApplet home) {
+		this(L,I,J,K,centerX,centerY,colors, seed,true,home);
 
 	}
 
@@ -83,6 +95,11 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 	abstract void setGrid();
 
+	public WB_IsoHexGrid getGrid() {
+		return grid;
+		
+	}
+	
 	abstract int getNumberOfTriangles();
 
 	final public void setRNGSeed(long seed) {
@@ -112,6 +129,22 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 	public void setYFlip(boolean b) {
 		YFLIP = b;
+	}
+
+	public List<int[]> cubesAtGridPosition(int q, int r) {
+		List<int[]> cubeList = new ArrayList<int[]>();
+		int stepLimit = Math.min(K, Math.min(I - q, J - r));
+		for (int step = 0, i = q, j = r; step < stepLimit; step++, i++, j++) {
+			if (i >= 0 && j >= 0)
+				cubeList.add(new int[] { i, j, step });
+		}
+		Collections.reverse(cubeList);
+		return cubeList;
+	}
+	
+	public void fill() {
+		set(0,0,0,I,J,K);
+		map();
 	}
 
 	public void blocks(int n) {
@@ -1616,7 +1649,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		return grid.getTriangleAtGridCoordinates(x, y, centerX, centerY, L, (YFLIP ? -1.0 : 1.0) * L);
 	}
 
-	private int index(final int i, final int j, final int k) {
+	int index(final int i, final int j, final int k) {
 
 		if (i > -1 && j > -1 && k > -1 && i < I && j < J && k < K) {
 			return k + j * K + i * JK;

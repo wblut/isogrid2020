@@ -49,6 +49,7 @@ public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 
 			cell.triangleUVOffsets[s][1] = cell.getCube(s)[triangleUVDirections[f][1]]*triangleUVDirectionSigns[f][1]-(triangleUVDirectionSigns[f][1]<0?1:0);
 			cell.part[s] = -1;
 		}
+		
 
 	}
 
@@ -61,28 +62,72 @@ public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 
 		return result;
 
 	}
+	
+	public boolean isFull(int q, int r) {
+		
+		int layer = q+r;
+		while (layer > 1) {
+			layer -= 3;
+		}
+	
+		while (layer < -1) {
+			layer += 3;
+		}
+
+		int ns;
+		switch (layer) {
+
+		case 0:
+			long key = getCellHash(q, r);
+			WB_IsoGridCell cell = cells.get(key);
+	       if(cell==null) return false;
+			for (int s = 0; s < 6; s++) {
+				if(cell.getOrientation(s)==-1) return false;
+			}
+			return true;
+			
+		case +1:
+			
+			for (int s = 0; s < 6; s++) {
+				key = getCellHash(q + mapQFromPosOne[s], r + mapRFromPosOne[s]);
+				cell = cells.get(key);
+				if(cell==null) return false;
+				ns = mapTrianglesFromPosOne[s];
+				if(cell.getOrientation(ns)==-1) return false;
+			}
+		    return true;
+
+		case -1:
+			for (int s = 0; s < 6; s++) {
+				key = getCellHash(q + mapQFromNegOne[s], r +mapRFromNegOne[s]);
+				cell = cells.get(key);
+				if(cell==null) return false;
+				ns = mapTrianglesFromNegOne[s];
+				if(cell.getOrientation(ns)==-1) return false;
+			}
+			return true;
+
+		default:
+			return false;
+		}
+		
+	}
+	
 
 	public void addCube(int i, int j, int k, int...params) {
+
 		int z = i + j + k;
-		int z3 = z / 3;
-		int ni = i - z3;
-		int nj = j - z3;
-		int nk = k - z3;
-		int layer = ni + nj + nk;
-		while (layer > 1) {
-			ni--;
-			nj--;
-			nk--;
-			layer = ni + nj + nk;
-		}
-		while (layer < -1) {
-			ni++;
-			nj++;
-			nk++;
-			layer = ni + nj + nk;
-		}
 		int q = i - k;
 		int r = j - k;
+		int layer = q+r;
+		while (layer > 1) {
+			layer -= 3;
+		}
+	
+		while (layer < -1) {
+			layer += 3;
+		}
+
 		int ns;
 		switch (layer) {
 
@@ -113,6 +158,7 @@ public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 
 		default:
 
 		}
+		
 	}
 
 

@@ -57,6 +57,8 @@ public abstract class WB_IsoHexGrid {
 	
 	public abstract void addTriangle(int q, int r, int f, int s,  int z, int orientation,int palette, int i, int j,
 			int k) ;
+	
+	public abstract boolean isFull(int q, int r) ;
 
 	public abstract void addCube(int i, int j, int k, int... params) ;
 
