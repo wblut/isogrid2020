@@ -20,7 +20,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	int[] colors;
 	RestorableUniformRandomProvider randomGen;
 	RandomProviderState state;
-	private boolean DEFER;
+	boolean DEFER;
 	boolean GLOBALDEFER;
 	boolean YFLIP;
 
@@ -803,8 +803,6 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		map();
 	}
 
-	
-	
 	public void openJBlocks(double chance, int di, int dk) {
 		for (int i = 0; i < I; i += di) {
 			for (int k = 0; k < K; k += dk) {
@@ -819,9 +817,8 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 			}
 		}
 		map();
-	}	
-	
-	
+	}
+
 	public void openKBlocks(double chance, int di, int dj) {
 		for (int i = 0; i < I; i += di) {
 			for (int j = 0; j < J; j += dj) {
@@ -837,7 +834,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		}
 		map();
 	}
-	
+
 	void openLeftI(int j, int k) {
 		int i = 0;
 		while (i < I && !cubes.get(i, j, k)) {
@@ -998,6 +995,36 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		map();
 	}
 
+	public void set(int i, int j, int k) {
+		cubes.set(i, j, k, true);
+		map();
+	}
+
+	public void clear(int i, int j, int k) {
+		cubes.set(i, j, k, false);
+		map();
+	}
+
+	public void and(int i, int j, int k) {
+		cubes.and(i, j, k, true);
+		map();
+	}
+
+	public void or(int i, int j, int k) {
+		cubes.or(i, j, k, true);
+		map();
+	}
+
+	public void xor(int i, int j, int k) {
+		cubes.xor(i, j, k, true);
+		map();
+	}
+
+	public void not(int i, int j, int k) {
+		cubes.not(i, j, k);
+		map();
+	}
+
 	final public void drawOrientation(int q, int r, double dx, double dy) {
 		double[] point = getGridCoordinates(q, r);
 		home.text("(" + q + "," + r + ")", (float) (point[0] + dx), (float) (point[1] + dy));
@@ -1129,8 +1156,8 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	final public void drawLinesSVG() {
 		for (WB_IsoGridLine line : grid.lines) {
 			for (WB_IsoGridSegment segment : line.getSegments()) {
-				grid.line(home, segment.getQ1(), segment.getR1(), segment.getQ2(), segment.getR2(), centerX, centerY,
-						L, (YFLIP ? -1.0 : 1.0) * L);
+				grid.line(home, segment.getQ1(), segment.getR1(), segment.getQ2(), segment.getR2(), centerX, centerY, L,
+						(YFLIP ? -1.0 : 1.0) * L);
 			}
 		}
 	}
@@ -1168,8 +1195,8 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	final public void drawOutlinesSVG() {
 		for (WB_IsoGridLine line : grid.outlines) {
 			for (WB_IsoGridSegment segment : line.getSegments()) {
-				grid.line(home, segment.getQ1(), segment.getR1(), segment.getQ2(), segment.getR2(), centerX, centerY,
-						L, (YFLIP ? -1.0 : 1.0) * L);
+				grid.line(home, segment.getQ1(), segment.getR1(), segment.getQ2(), segment.getR2(), centerX, centerY, L,
+						(YFLIP ? -1.0 : 1.0) * L);
 
 			}
 		}

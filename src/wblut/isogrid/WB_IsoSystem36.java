@@ -1,5 +1,7 @@
 package wblut.isogrid;
 
+import org.apache.commons.rng.simple.RandomSource;
+
 import processing.core.PApplet;
 
 public class WB_IsoSystem36 extends WB_IsoSystem<WB_IsoHexGrid36> {
@@ -14,6 +16,74 @@ public class WB_IsoSystem36 extends WB_IsoSystem<WB_IsoHexGrid36> {
 	public WB_IsoSystem36(WB_IsoSystem36 iso) {
 		super(iso);
 		DUAL=iso.DUAL;
+
+	}
+	
+	public WB_IsoSystem36(WB_IsoSystem6 iso, int[] colors) {
+		randomGen = RandomSource.create(RandomSource.MT);
+		state = randomGen.saveState();
+		this.home = iso.home;
+		this.L =iso.L;
+		this.I = iso.I+3;
+		this.J = iso.J+3;
+		this.K = iso.K+3;
+		IJK = I * J * K;
+		this.colors = colors;
+		this.centerX = iso.centerX;
+		this.centerY = iso.centerY;
+		this.cubes = new WB_CubeGrid(I,J,K);
+		this.seed = iso.seed;
+		setGrid();
+		
+		for(int i=0;i<iso.I;i++) {
+			for(int j=0;j<iso.J;j++) {
+				for(int k=0;k<iso.K;k++) {
+					if(iso.cubes.get(i, j, k)) {
+					  cubes.set(i, j+1,k+1,true);
+					  cubes.set(i+1, j+1,k+1,true);
+					  cubes.set(i+2, j+1,k+1,true);
+					  cubes.set(i+3, j+1,k+1,true);
+					  cubes.set(i, j+2,k+1,true);
+					  cubes.set(i+1, j+2,k+1,true);
+					  cubes.set(i+2, j+2,k+1,true);
+					  cubes.set(i+3, j+2,k+1,true);
+					  cubes.set(i+1, j+3,k+1,true);
+					  cubes.set(i+2, j+3,k+1,true);
+					  cubes.set(i+1, j,k+1,true);
+					  cubes.set(i+2, j,k+1,true);
+					  cubes.set(i, j+1,k+2,true);
+					  cubes.set(i+1, j+1,k+2,true);
+					  cubes.set(i+2, j+1,k+2,true);
+					  cubes.set(i+3, j+1,k+2,true);
+					  cubes.set(i, j+2,k+2,true);
+					  cubes.set(i+1, j+2,k+2,true);
+					  cubes.set(i+2, j+2,k+2,true);
+					  cubes.set(i+3, j+2,k+2,true);
+					  cubes.set(i+1, j+3,k+2,true);
+					  cubes.set(i+2, j+3,k+2,true);
+					  cubes.set(i+1, j,k+2,true);
+					  cubes.set(i+2, j,k+2,true);
+					  cubes.set(i+1, j+1,k+3,true);
+					  cubes.set(i+2, j+1,k+3,true);
+					  cubes.set(i+1, j+2,k+3,true);
+					  cubes.set(i+2, j+2,k+3,true);
+					  cubes.set(i+1, j+1,k,true);
+					  cubes.set(i+2, j+1,k,true);
+					  cubes.set(i+1, j+2,k,true);
+					  cubes.set(i+2, j+2,k,true);
+					}
+	
+				}
+			}
+		}
+		
+		
+		
+		DEFER = false;
+		GLOBALDEFER = false;
+		YFLIP = true;
+		DUAL=true;
+		mapVoxelsToHexGrid();
 
 	}
 	
@@ -67,7 +137,7 @@ public class WB_IsoSystem36 extends WB_IsoSystem<WB_IsoHexGrid36> {
 			for (int j = 0; j < J; j++) {
 				for (int k = 0; k < K; k++) {
 					if (cubes.get(id))
-						grid.addCube(i, j, k, state(i, j, k), -1, cubes.getPalette(id));
+						grid.addCube(i, j, k, state(i, j, k), cubes.getPalette(id));
 					id++;
 				}
 				
