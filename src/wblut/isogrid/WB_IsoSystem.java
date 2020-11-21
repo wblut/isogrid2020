@@ -22,6 +22,9 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	PApplet home;
 	int seed;
 	int[] colors;
+	int numPalettes;
+	int numParts;
+	int numRegions;
 	RestorableUniformRandomProvider randomGen;
 	RandomProviderState state;
 	boolean DEFER;
@@ -32,7 +35,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 	}
 
-	public WB_IsoSystem(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
+	WB_IsoSystem(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
 			boolean full, PApplet home) {
 		randomGen = RandomSource.create(RandomSource.MT);
 		state = randomGen.saveState();
@@ -59,13 +62,13 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 	}
 
-	public WB_IsoSystem(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
+	WB_IsoSystem(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
 			PApplet home) {
 		this(L,I,J,K,centerX,centerY,colors, seed,true,home);
 
 	}
 
-	public WB_IsoSystem(WB_IsoSystem<IHG> iso) {
+	WB_IsoSystem(WB_IsoSystem<IHG> iso) {
 		randomGen = RandomSource.create(RandomSource.MT);
 		state = randomGen.saveState();
 		this.home = iso.home;
@@ -76,6 +79,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		IJK = I * J * K;
 		this.colors = new int[iso.colors.length];
 		System.arraycopy(iso.colors, 0, this.colors, 0, iso.colors.length);
+		this.numPalettes=iso.numPalettes;
 		this.centerX = iso.centerX;
 		this.centerY = iso.centerY;
 		this.cubes = new WB_CubeGrid(iso.cubes);
@@ -102,6 +106,18 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	
 	abstract int getNumberOfTriangles();
 
+	public int getNumberOfParts() {
+		return numParts;
+	}
+	
+	public int getNumberOfRegions() {
+		return numRegions;
+	}
+	
+	public int getNumberOfPalettes() {
+		return numPalettes;
+	}
+	
 	final public void setRNGSeed(long seed) {
 		randomGen = RandomSource.create(RandomSource.MT, seed);
 		state = randomGen.saveState();
@@ -1277,7 +1293,28 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		}
 	}
 
-	final public void drawTriangles(double I, double J, double K, PImage[] textures) {
+	
+	final public void drawTriangles(WB_IsoColor colors) {
+		double[] center;
+		for (WB_IsoGridCell cell : grid.cells.values()) {
+			center = getGridCoordinates(cell.getQ(), cell.getR());
+			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
+				if (cell.orientation[f] > -1) {
+					home.beginShape(PConstants.TRIANGLES);
+					home.fill(colors.color(home.g,cell,f));
+					triVertices(center, f);
+					home.endShape();
+				}
+			}
+		}
+	}
+	
+	
+	final public void drawTriangles(PImage[] textures) {
+		drawTriangles(1,1,1, textures);
+	}
+	
+	final public void drawTriangles(double scaleI, double scaleJ, double scaleK, PImage[] textures) {
 		double[] center;
 		int offsetU, offsetV;
 		double scaleU, scaleV;
@@ -1294,17 +1331,17 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 					switch (cell.getTriangleUDirection(f)) {
 					case 0:
-						scaleU = 1.0 / Math.max(1.0, I);
+						scaleU = 1.0 / Math.max(1.0, scaleI*I);
 
 						break;
 
 					case 1:
-						scaleU = 1.0 / Math.max(1.0, J);
+						scaleU = 1.0 / Math.max(1.0, scaleJ*J);
 
 						break;
 
 					case 2:
-						scaleU = 1.0 / Math.max(1.0, K);
+						scaleU = 1.0 / Math.max(1.0, scaleK*K);
 						break;
 
 					default:
@@ -1314,17 +1351,17 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 					switch (cell.getTriangleVDirection(f)) {
 					case 0:
-						scaleV = 1.0 / Math.max(1.0, I);
+						scaleV = 1.0 / Math.max(1.0, scaleI*I);
 
 						break;
 
 					case 1:
-						scaleV = 1.0 / Math.max(1.0, J);
+						scaleV = 1.0 / Math.max(1.0, scaleJ*J);
 
 						break;
 
 					case 2:
-						scaleV = 1.0 / Math.max(1.0, K);
+						scaleV = 1.0 / Math.max(1.0, scaleK*K);
 
 						break;
 
@@ -1347,11 +1384,14 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 			}
 		}
 	}
-
-	final public void drawTriangles(double I, double J, double K, PImage[] textures, float ho, float hf, float hr,
-			float zo, float zf, float zo2, float zf2, float oo, float of) {
+	
+	final public void drawTriangles(PImage[] textures, WB_IsoColor color) {
+		drawTriangles(1,1,1,textures, color);
+	
+	}
+	
+	final public void drawTriangles(double scaleI, double scaleJ, double scaleK, PImage[] textures, WB_IsoColor color) {
 		double[] center;
-		float hue;
 		int offsetU, offsetV;
 		double scaleU, scaleV;
 		for (WB_IsoGridCell cell : grid.cells.values()) {
@@ -1360,280 +1400,61 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				if (cell.orientation[f] > -1) {
 
 					home.beginShape(PConstants.TRIANGLES);
+					home.tint(color.color(home.g,cell,f));
 					home.texture(textures[cell.orientation[f]]);
-					home.colorMode(PConstants.HSB);
-					hue = (hf * cell.part[f]) % hr;
-					hue = ho + hue;
-					if (hue < 0)
-						hue += 256 * ((int) (hue / (-256)) + 1);
-					home.tint(hue % 256, zo + zf * cell.z[f], (oo + of * cell.orientation[f] + zo2 + zf2 * cell.z[f]));
-					home.colorMode(PConstants.RGB);
 
 					offsetU = cell.getTriangleUOffset(f);
 					offsetV = cell.getTriangleVOffset(f);
 
 					switch (cell.getTriangleUDirection(f)) {
 					case 0:
-						scaleU = 1.0 / Math.max(1.0, I);
+						scaleU = 1.0 / Math.max(1.0, scaleI*I);
+
 						break;
 
 					case 1:
-						scaleU = 1.0 / Math.max(1.0, J);
+						scaleU = 1.0 / Math.max(1.0, scaleJ*J);
+
 						break;
 
 					case 2:
-						scaleU = 1.0 / Math.max(1.0, K);
+						scaleU = 1.0 / Math.max(1.0, scaleK*K);
 						break;
 
 					default:
 						scaleU = 1.0;
+
 					}
 
 					switch (cell.getTriangleVDirection(f)) {
 					case 0:
-						scaleV = 1.0 / Math.max(1.0, I);
+						scaleV = 1.0 / Math.max(1.0, scaleI*I);
+
 						break;
 
 					case 1:
-						scaleV = 1.0 / Math.max(1.0, J);
+						scaleV = 1.0 / Math.max(1.0, scaleJ*J);
+
 						break;
 
 					case 2:
-						scaleV = 1.0 / Math.max(1.0, K);
+						scaleV = 1.0 / Math.max(1.0, scaleK*K);
+
 						break;
 
 					default:
 						scaleV = 1.0;
 					}
-
-					grid.triVertex(home.g, f, 0, center[0], center[1], L, L,
-							scaleU * (cell.getTriangleU(f, 0) + offsetU), scaleV * (cell.getTriangleV(f, 0) + offsetV));
-					grid.triVertex(home.g, f, 1, center[0], center[1], L, L,
-							scaleU * (cell.getTriangleU(f, 1) + offsetU), scaleV * (cell.getTriangleV(f, 1) + offsetV));
-					grid.triVertex(home.g, f, 2, center[0], center[1], L, L,
-							scaleU * (cell.getTriangleU(f, 2) + offsetU), scaleV * (cell.getTriangleV(f, 2) + offsetV));
-
-					home.endShape();
-				}
-			}
-		}
-	}
-
-	final public void drawTrianglesRegion() {
-		double[] center;
-		for (WB_IsoGridCell cell : grid.cells.values()) {
-			center = getGridCoordinates(cell.getQ(), cell.getR());
-			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-				if (cell.orientation[f] > -1) {
-
-					home.colorMode(PConstants.HSB);
-					home.fill((cell.region[f] * 37) % 256, 255, 255 * (float) cell.drop[f]);
-					home.colorMode(PConstants.RGB);
-					home.beginShape(PConstants.TRIANGLES);
-					triVertices(center, f);
-
-					home.endShape();
-				}
-			}
-		}
-	}
-
-	final public void drawTrianglesRegion(PGraphics home) {
-		double[] center;
-		for (WB_IsoGridCell cell : grid.cells.values()) {
-			center = getGridCoordinates(cell.getQ(), cell.getR());
-			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-				if (cell.orientation[f] > -1) {
-					home.colorMode(PConstants.HSB);
-					home.fill((cell.region[f] * 37) % 256, 255, 255);
-					home.colorMode(PConstants.RGB);
-					home.beginShape(PConstants.TRIANGLES);
-					triVertices(home, center, f);
-					home.endShape();
-				}
-			}
-		}
-	}
-
-	final public void drawTrianglesIJK(PGraphics home, float L, float M, float N) {
-		double[] center;
-		for (WB_IsoGridCell cell : grid.cells.values()) {
-			center = getGridCoordinates(cell.getQ(), cell.getR());
-			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-				if (cell.orientation[f] > -1) {
-
-					home.fill(cell.getCube(f)[0] * 256.0f / L, cell.getCube(f)[1] * 256.0f / M,
-							cell.getCube(f)[2] * 256.0f / N);
-
-					home.beginShape(PConstants.TRIANGLES);
-					triVertices(home, center, f);
-
-					home.endShape();
-				}
-			}
-		}
-	}
-
-	final public void drawTrianglesZ(float hf, int counter) {
-		drawTrianglesZ(home.g, hf, counter);
-	}
-
-	final public void drawTrianglesZ(PGraphics home, float hf, int counter) {
-		double[] center;
-		float hue;
-		for (WB_IsoGridCell cell : grid.cells.values()) {
-			center = getGridCoordinates(cell.getQ(), cell.getR());
-			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-				if (cell.orientation[f] > -1) {
-					home.colorMode(PConstants.HSB);
-					hue = hf * cell.z[f] + counter;
-					if (hue < 0)
-						hue += 256 * ((int) (hue / (-256)) + 1);
-					home.fill(hue % 256, 255, 255);
-					home.colorMode(PConstants.RGB);
-					home.beginShape(PConstants.TRIANGLES);
-					triVertices(home, center, f);
-					home.endShape();
-				}
-			}
-		}
-	}
-
-	final public void drawTrianglesZRegion(float hf, int counter) {
-		drawTrianglesZRegion(home.g, hf, counter);
-	}
-
-	final public void drawTrianglesZRegion(PGraphics home, float hf, int counter) {
-		double[] center;
-		float hue;
-		for (WB_IsoGridCell cell : grid.cells.values()) {
-			center = getGridCoordinates(cell.getQ(), cell.getR());
-			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-				if (cell.orientation[f] > -1) {
-					home.colorMode(PConstants.HSB);
-					hue = hf * cell.z[f] + counter + 37 * cell.region[f];
-					if (hue < 0)
-						hue += 256 * ((int) (hue / (-256)) + 1);
-					home.fill(hue % 256, 255, 255);
-					home.colorMode(PConstants.RGB);
-					home.beginShape(PConstants.TRIANGLES);
-					triVertices(home, center, f);
-
-					home.endShape();
-				}
-			}
-		}
-	}
-
-	final public void drawTrianglesPart(PGraphics home, float ho, float hf, float hr, float zo, float zf, float zo2,
-			float zf2, float oo, float of) {
-		double[] center;
-		float hue;
-		for (WB_IsoGridCell cell : grid.cells.values()) {
-			center = getGridCoordinates(cell.getQ(), cell.getR());
-			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-				if (cell.orientation[f] > -1) {
-					home.colorMode(PConstants.HSB);
-					hue = (hf * cell.part[f]) % hr;
-					hue = ho + hue;
-					if (hue < 0)
-						hue += 256 * ((int) (hue / (-256)) + 1);
-					home.fill(hue % 256, zo + zf * cell.z[f], oo + of * cell.orientation[f] + zo2 + zf2 * cell.z[f]);
-					home.colorMode(PConstants.RGB);
-					home.beginShape(PConstants.TRIANGLES);
-					triVertices(home, center, f);
-
-					home.endShape();
-				}
-			}
-		}
-	}
-
-	final public void drawTrianglesPart(float ho, float hf, float hr, float zo, float zf, float zo2, float zf2,
-			float oo, float of) {
-		drawTrianglesPart(home.g, ho, hf, hr, zo, zf, zo2, zf2, oo, of);
-
-	}
-
-	final public void drawTrianglesWithPart(PGraphics home, int part) {
-		double[] center;
-
-		for (WB_IsoGridCell cell : grid.cells.values()) {
-			center = getGridCoordinates(cell.getQ(), cell.getR());
-			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-				if (cell.orientation[f] > -1 && cell.part[f] == part) {
-
-					home.beginShape(PConstants.TRIANGLES);
-					triVertices(home, center, f);
-
-					home.endShape();
-				}
-			}
-		}
-	}
-
-	final public void drawTriangles(int[] colors) {
-		double[] center;
-		for (WB_IsoGridCell cell : grid.cells.values()) {
-			center = getGridCoordinates(cell.getQ(), cell.getR());
-			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-				if (cell.orientation[f] > -1) {
-
-					home.fill(colors[10 * cell.palette[f] + cell.orientation[f]]);
-					home.stroke(colors[10 * cell.palette[f] + cell.orientation[f]]);
-					home.beginShape(PConstants.TRIANGLES);
-					triVertices(center, f);
-
-					home.endShape();
-				}
-			}
-		}
-	}
-
-	final public void drawTriangles(int zmin, int zmax) {
-		double[] center;
-		for (WB_IsoGridCell cell : grid.cells.values()) {
-			center = getGridCoordinates(cell.getQ(), cell.getR());
-			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-				if (cell.orientation[f] > -1 && cell.z[f] >= zmin && cell.z[f] < zmax) {
-					home.beginShape(PConstants.TRIANGLES);
-					triVertices(center, f);
-					home.endShape();
-				}
-			}
-		}
-	}
-
-	final public void drawTriangles(int[] colors, int zmin, int zmax) {
-		double[] center;
-		for (WB_IsoGridCell cell : grid.cells.values()) {
-			center = getGridCoordinates(cell.getQ(), cell.getR());
-			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-				if (cell.orientation[f] > -1 && cell.z[f] >= zmin && cell.z[f] < zmax) {
-
-					home.fill(colors[10 * cell.palette[f] + cell.orientation[f]]);
-					home.noStroke();// stroke(colors[10 * cell.colorIndices[f] + cell.orientations[f]]);
-					home.beginShape(PConstants.TRIANGLES);
-					triVertices(center, f);
-					home.endShape();
-				}
-			}
-		}
-	}
-
-	final public void drawTriangles(int[] colors, int zmin, int zmax, int znear, int zfar, int mini, int maxi, int minj,
-			int maxj, int mink, int maxk) {
-		double[] center;
-		for (WB_IsoGridCell cell : grid.cells.values()) {
-			center = getGridCoordinates(cell.getQ(), cell.getR());
-			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-				if (cell.orientation[f] > -1 && cell.z[f] >= zmin && cell.z[f] < zmax && cell.cubei[f] >= mini
-						&& cell.cubei[f] < maxi && cell.cubej[f] >= minj && cell.cubej[f] < maxj
-						&& cell.cubek[f] >= mink && cell.cubek[f] < maxk) {
-					home.fill(color(colors[10 * cell.palette[f] + cell.orientation[f]], cell.z[f], zfar, znear));
-					home.stroke(color(colors[10 * cell.palette[f] + cell.orientation[f]], cell.z[f], zfar, znear));
-					home.beginShape(PConstants.TRIANGLES);
-					triVertices(center, f);
+					
+					grid.triVertex(home.g, f, 0, center[0], center[1], L, (YFLIP ? -1.0 : 1.0) * L,
+							scaleU * (cell.getTriangleU(f, 0) + offsetU),
+							(YFLIP ? -1.0 : 1.0) * scaleV * (cell.getTriangleV(f, 0) + offsetV));
+					grid.triVertex(home.g, f, 1, center[0], center[1], L, (YFLIP ? -1.0 : 1.0) * L,
+							scaleU * (cell.getTriangleU(f, 1) + offsetU),
+							(YFLIP ? -1.0 : 1.0) * scaleV * (cell.getTriangleV(f, 1) + offsetV));
+					grid.triVertex(home.g, f, 2, center[0], center[1], L, (YFLIP ? -1.0 : 1.0) * L,
+							scaleU * (cell.getTriangleU(f, 2) + offsetU),
+							(YFLIP ? -1.0 : 1.0) * scaleV * (cell.getTriangleV(f, 2) + offsetV));
 
 					home.endShape();
 				}
@@ -1658,14 +1479,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		}
 	}
 
-	final static int color(final int color, int z, int zmin, int zmax) {
-		int r = (color >> 16) & 0xff;
-		int g = (color >> 8) & 0xff;
-		int b = (color) & 0xff;
-		double f = (z - zmin) / (double) (zmax - zmin);
-		f = Math.min(Math.max(f, 0.0), 1.0);
-		return 255 << 24 | ((int) Math.round(f * r)) << 16 | ((int) Math.round(f * g)) << 8 | ((int) Math.round(f * b));
-	}
+
 
 	final double random(double v) {
 		return randomGen.nextDouble() * v;
@@ -1674,5 +1488,63 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	final double random(double v, double w) {
 		return v + randomGen.nextDouble() * (w - v);
 	}
+	
+	
+	int[] createDualPalette(int[] palette) {
+		if(palette.length%3!=0) throw new IllegalArgumentException("Palette length should be a mutiple of 3.");
+		home.pushStyle();
+		home.colorMode(PConstants.RGB);  
+		int numberOfPalettes=palette.length/3;
+		  int[] colors=new int[10*numberOfPalettes*10];
+		  float hsqrt2=(float)Math.sqrt(2.0)*0.5f;
+		  float hsqrt3=(float)Math.sqrt(3.0)*0.5f;
 
+		  float[][] normals=new float[10][3];
+
+		  normals[0]= new float[]{1, 0, 0};
+		  normals[1]= new float[]{0, 1, 0};
+		  normals[2]= new float[]{0, 0, 1};
+		  normals[3]= new float[]{hsqrt2, hsqrt2, 0};
+		  normals[4]= new float[]{hsqrt2, 0, hsqrt2};
+		  normals[5]= new float[]{0, hsqrt2, hsqrt2};
+		  normals[6]= new float[]{hsqrt3, hsqrt3, hsqrt3};
+		  normals[7]= new float[]{-hsqrt3, hsqrt3, hsqrt3};
+		  normals[8]= new float[]{hsqrt3, -hsqrt3, hsqrt3};
+		  normals[9]= new float[]{hsqrt3, hsqrt3, -hsqrt3};
+
+		  for(int p=0;p<numberOfPalettes;p++) {
+		
+		   float[][] light=new float[][]{
+
+		    {1, 0, 0,(palette[3*p]>> 16) & 0xff, (palette[3*p]>> 8) & 0xff, palette[3*p] & 0xff}, 
+		    {0, 1, 0,(palette[3*p+1]>> 16) & 0xff, (palette[3*p+1]>> 8) & 0xff, palette[3*p+1] & 0xff}, 
+		    {0, 0, 1,(palette[3*p+2]>> 16) & 0xff, (palette[3*p+2]>> 8) & 0xff, palette[3*p+2] & 0xff} 
+		  };
+
+		  for (int i=0; i<10; i++) {
+		    float red, green, blue, dot;
+		    red=green=blue=0;
+		    for (int l=0; l<3; l++) {
+		      dot=(float)Math.max(0, normals[i][0]*light[l][0]+normals[i][1]*light[l][1]+normals[i][2]*light[l][2]);
+		      red+=dot*light[l][3];
+		      green+=dot*light[l][4];
+		      blue+=dot*light[l][5];
+		    }
+
+		    float max=(float)Math.max(red,Math.max( green, blue));
+		    if (max>400.0f) {
+		      red*=400.0f/max; 
+		      green*=400.0f/max; 
+		      blue*=400.0f/max;
+		    }
+		    colors[10*p+i]=home.color((float)Math.max(Math.min(red, 255), 0), (float)Math.max(Math.min(green, 255), 0), (float)Math.max(Math.min(blue, 255), 0));
+		  }
+		  
+		  }
+		  home.popStyle();
+		  return colors;
+		}
+
+	
+	
 }

@@ -3,19 +3,21 @@ package wblut.isogrid;
 import java.util.Comparator;
 
 public class WB_IsoGridCell {
-	private int q, r;
 	int numTriangles;
+	private int q, r;
+	private int[] i;
+	private int[] j;
+	private int[] k;
+	
 	protected int[] z;
-	protected int[] of;
+	protected int[] triangle;
 	protected int[] orientation;
 	protected int[] palette;
 	
-	protected int[] cubei;
-	protected int[] cubej;
-	protected int[] cubek;
 	protected double[][] triangleUV;
 	protected int[][] triangleUVOffsets;
 	protected int[][] triangleUVDirections;
+	
 	protected int[] region;
 	protected int[] part;
 	protected double[] drop;
@@ -25,27 +27,33 @@ public class WB_IsoGridCell {
 		this.numTriangles = numTriangles;
 		this.q = q;
 		this.r = r;
+		i = new int[numTriangles];
+		j = new int[numTriangles];
+		k = new int[numTriangles];
+	
+		z = new int[numTriangles];
+		triangle = new int[numTriangles];	
 		orientation = new int[numTriangles];
 		palette = new int[numTriangles];
-		z = new int[numTriangles];
-		of = new int[numTriangles];
-		cubei = new int[numTriangles];
-		cubej = new int[numTriangles];
-		cubek = new int[numTriangles];
-		region = new int[numTriangles];
-		drop = new double[numTriangles];
+		
 		triangleUV = new double[numTriangles][6];
 		triangleUVOffsets = new int[numTriangles][2];
 		triangleUVDirections = new int[numTriangles][2];
+		
+		region = new int[numTriangles];
 		part = new int[numTriangles];
+		drop = new double[numTriangles];
+		
 		for (int f = 0; f < numTriangles; f++) {
+			i[f] = -Integer.MAX_VALUE;
+			j[f] = -Integer.MAX_VALUE;
+			k[f] = -Integer.MAX_VALUE;
+		
+			z[f] = -Integer.MAX_VALUE;
+			triangle[f] = -1;
 			orientation[f] = -1;
 			palette[f] = 0;
-			z[f] = -Integer.MAX_VALUE;
-			of[f] = -Integer.MAX_VALUE;
-			cubei[f] = -Integer.MAX_VALUE;
-			cubej[f] = -Integer.MAX_VALUE;
-			cubek[f] = -Integer.MAX_VALUE;
+			
 			region[f] = -1;
 			drop[f] = -1;
 			part[f] = -1;
@@ -56,40 +64,6 @@ public class WB_IsoGridCell {
 		return numTriangles;
 	}
 
-	public int getOrientation(int f) {
-		return orientation[f];
-	}
-
-	public int getPalette(int f) {
-		return palette[f];
-	}
-
-	public int getZ(int f) {
-		return z[f];
-	}
-
-	public int getF(int f) {
-		return of[f];
-	}
-
-	public int[] getCube(int f) {
-		if (cubei[f] == -Integer.MAX_VALUE)
-			return null;
-		return new int[] { cubei[f], cubej[f], cubek[f] };
-	}
-
-	public int getRegion(int f) {
-		return region[f];
-	}
-
-	public double getDrop(int f) {
-		return drop[f];
-	}
-
-	public int getPart(int f) {
-		return part[f];
-	}
-
 	public int getQ() {
 		return q;
 	}
@@ -97,7 +71,55 @@ public class WB_IsoGridCell {
 	public int getR() {
 		return r;
 	}
+	
+	public int getI(int f) {
+		return i[f];
+	}
+	
+	public int getJ(int f) {
+		return j[f];
+	}
+	
+	public int getK(int f) {
+		return k[f];
+	}
+	
+	public int[] getIndices(int f) {
+		if (i[f] == -Integer.MAX_VALUE)
+			return null;
+		return new int[] { i[f], j[f], k[f] };
+	}
 
+	
+	public void setI(int f,  int id) {
+		i[f]=id;
+	}
+	
+	public void setJ(int f, int id) {
+		j[f]=id;
+	}
+	
+	public void setK(int f, int id) {
+		k[f]=id;
+	}
+	
+	public int getZ(int f) {
+		return z[f];
+	}
+	
+	public int getTriangle(int f) {
+		return triangle[f];
+	}
+	
+	public int getOrientation(int f) {
+		return orientation[f];
+	}
+
+	public int getPalette(int f) {
+		return palette[f];
+	}
+	
+	
 	public double getTriangleU(int f, int i) {
 
 		return triangleUV[f][2 * i];
@@ -126,6 +148,19 @@ public class WB_IsoGridCell {
 	public int getTriangleVDirection(int f) {
 
 		return triangleUVDirections[f][1];
+	}
+
+	
+	public int getPart(int f) {
+		return part[f];
+	}
+
+	public int getRegion(int f) {
+		return region[f];
+	}
+
+	public double getDrop(int f) {
+		return drop[f];
 	}
 
 	public boolean isEmpty() {
