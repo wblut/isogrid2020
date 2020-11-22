@@ -205,11 +205,7 @@ public class WB_IsoSystem36 extends WB_IsoSystem<WB_IsoHexGrid36> {
 			}
 
 		}
-		numParts=cubes.labelParts();
-		numRegions=10*numParts;
-		grid.setParts(cubes);
-		grid.collectRegions();
-		grid.collectLines();
+
 	}
 
 }

@@ -20,6 +20,7 @@ public class WB_CubeGrid {
 	int[] paletteSwap;
 	boolean[] visited;
 	int[] parts;
+	double[][] visibility;
 
 	public WB_CubeGrid(int I, int J, int K) {
 
@@ -35,6 +36,7 @@ public class WB_CubeGrid {
 		palettes = new int[IJK];
 		paletteBuffer = new int[IJK];
 		parts = new int[IJK];
+		visibility = new double[IJK][6];
 	}
 
 	public WB_CubeGrid(WB_CubeGrid cubes) {
@@ -53,7 +55,10 @@ public class WB_CubeGrid {
 		System.arraycopy(cubes.palettes, 0, palettes, 0, IJK);
 		paletteBuffer = new int[IJK];
 		parts = new int[IJK];
+
 		System.arraycopy(cubes.parts, 0, parts, 0, IJK);
+		visibility = new double[IJK][6];
+		System.arraycopy(cubes.visibility, 0, visibility, 0, IJK);
 
 	}
 
@@ -209,7 +214,7 @@ public class WB_CubeGrid {
 	}
 
 	public int labelParts() {
-		resetParts();
+
 		int currentPart = 0;
 		int[] indices = null;
 		do {
@@ -223,13 +228,190 @@ public class WB_CubeGrid {
 		return currentPart;
 	}
 
-	private void resetParts() {
+	public void setVisibility() {
+		setMaxVisibilityAtBoundaries();
+		int index=0;
+		for (int i = 0; i < I; i++) {
+			for (int j = 0; j < J; j++) {
+				for (int k = 0; k < K; k++) {
+					if(getVisibility(index,0)<I) setVisibility(index,0,scanILeft(i,index));
+					if(getVisibility(index,1)<I) setVisibility(index,1,scanIRight(i,index));
+					if(getVisibility(index,2)<J) setVisibility(index,2,scanJLeft(j,index));
+					if(getVisibility(index,3)<J) setVisibility(index,3,scanJRight(j,index));
+					if(getVisibility(index,4)<K) setVisibility(index,4,scanKLeft(k,index));
+					if(getVisibility(index,5)<K) setVisibility(index,5,scanKRight(k,index));
+					index++;
+				}
+			}
+		}
+
+	}
+
+	void setMaxVisibilityAtBoundaries() {
+
+		int index = 0;
+
+		for (int i = 0; i < I; i++) {
+			index = i * JK;
+			for (int k = 0; k < K; k++) {
+				for (int j = 0; j < J; j++) {
+					visibility[index + j * K][2] = J;
+					if (get(index + j * K)) {
+
+						break;
+					}
+				}
+				for (int j = J - 1; j >= 0; j--) {
+					visibility[index + j * K][3] = J;
+					if (get(index + j * K)) {
+
+						break;
+					}
+				}
+				index++;
+			}
+		}
+
+		for (int i = 0; i < I; i++) {
+			index = i * JK;
+			for (int j = 0; j < J; j++) {
+				for (int k = 0; k < K; k++) {
+					visibility[index + k][4] = K;
+					if (get(index + k)) {
+
+						break;
+					}
+				}
+				for (int k = K - 1; k >= 0; k--) {
+					visibility[index + k][5] = K;
+					if (get(index + k)) {
+
+						break;
+					}
+				}
+				index += K;
+			}
+		}
+
+		for (int j = 0; j < J; j++) {
+			index = j * K;
+			for (int k = 0; k < K; k++) {
+				for (int i = 0; i < I; i++) {
+					visibility[index + i * JK][0] = I;
+					if (get(index + i * JK)) {
+
+						break;
+					}
+				}
+				for (int i = I - 1; i >= 0; i--) {
+					visibility[index + i * JK][1] = I;
+					if (get(index + i * JK)) {
+
+						break;
+					}
+				}
+				index++;
+			}
+		}
+	}
+
+
+
+	int scanILeft(int i, int index) {
+		int count = 0;
+		for (int ci = i - 1; ci >= 0; ci--) {
+			if (get(index + (ci - i) * JK)) {
+				break;
+			}
+			count++;
+		}
+		return count;
+	}
+
+	int scanIRight(int i, int index) {
+		int count = 0;
+		for (int ci = i + 1; ci < I; ci++) {
+			if (get(index + (ci - i) * JK)) {
+				break;
+			}
+			count++;
+		}
+		return count;
+	}
+
+	int scanJLeft(int j, int index) {
+		int count = 0;
+
+		for (int cj = j - 1; cj >= 0; cj--) {
+			if (get(index + (cj - j) * K)) {
+				break;
+			}
+			count++;
+		}
+		return count;
+	}
+
+	int scanJRight(int j, int index) {
+		int count = 0;
+		for (int cj = j + 1; cj < J; cj++) {
+			if (get(index + (cj - j) * K)) {
+				break;
+			}
+			count++;
+		}
+		return count;
+	}
+
+	int scanKLeft(int k, int index) {
+		int count = 0;
+		for (int ck = k - 1; ck >= 0; ck--) {
+			if (get(index + ck - k)) {
+				break;
+			}
+			count++;
+		}
+		return count;
+	}
+
+	int scanKRight(int k, int index) {
+		int count = 0;
+		for (int ck = k + 1; ck < K; ck++) {
+			if (get(index + ck - k)) {
+				break;
+			}
+			count++;
+		}
+		return count;
+	}
+	
+
+	public double getVisibility(int i, int j, int k, int side) {
+		return visibility[index(i, j, k)][side];
+	}
+
+	public double getVisibility(int id, int side) {
+		return visibility[id][side];
+	}
+	
+	public void setVisibility(int i,int j, int k, int side, double value) {
+		visibility[index(i,j,k)][side]=value;
+	}
+	
+	public void setVisibility(int id, int side, double value) {
+		visibility[id][side]=value;
+	}
+
+	void reset() {
 		int id = 0;
 		for (int i = 0; i < I; i++) {
 			for (int j = 0; j < J; j++) {
 				for (int k = 0; k < K; k++) {
 					parts[id] = -1;
-					visited[id++] = false;
+					visited[id] = false;
+					visibility[id][0] = 0;
+					visibility[id][1] = 0;
+					visibility[id][2] = 0;
+					id++;
 				}
 			}
 		}
@@ -411,58 +593,51 @@ public class WB_CubeGrid {
 		int index = index(i, j, k);
 		if (index == -1 || !get(index))
 			return false;
-		for(int di=-1;di<=1;di++) {
-			for(int dj=-1;dj<=1;dj++) {
-				for(int dk=-1;dk<=1;dk++) {
-					index = index(i + di, j+dj, k+dk);
-					if (index == -1 ||  !get(index))
+		for (int di = -1; di <= 1; di++) {
+			for (int dj = -1; dj <= 1; dj++) {
+				for (int dk = -1; dk <= 1; dk++) {
+					index = index(i + di, j + dj, k + dk);
+					if (index == -1 || !get(index))
 						return false;
 				}
 			}
 		}
-		
-		
-		
+
 		return true;
 	}
-	
 
-
-	
 	public boolean isWall(int i, int j, int k) {
 		int index = index(i, j, k);
 		if (index == -1 || !get(index))
 			return false;
 		return !isBulk(i, j, k);
 	}
-	
 
 	public boolean isEdge(int i, int j, int k) {
 		int index = index(i, j, k);
 		if (index == -1 || !get(index))
 			return false;
-		if(isBulk(i,j,k)) return false;
+		if (isBulk(i, j, k))
+			return false;
 		int q = 0;
 		int r = 0;
 		int s = 0;
 
-		if (isWall(i+1,j,k))
+		if (isWall(i + 1, j, k))
 			q++;
-		if (isWall(i-1,j,k))
+		if (isWall(i - 1, j, k))
 			q++;
-		if (isWall(i,j+1,k))
+		if (isWall(i, j + 1, k))
 			r++;
-		if (isWall(i,j-1,k))
+		if (isWall(i, j - 1, k))
 			r++;
-		if (isWall(i,j,k+1))
+		if (isWall(i, j, k + 1))
 			s++;
-		if (isWall(i,j,k-1))
+		if (isWall(i, j, k - 1))
 			s++;
-		int cases=(q==0?1:0)+(r==0?1:0)+(s==0?1:0);
-		return cases!=1;
-		
-		
-				
+		int cases = (q == 0 ? 1 : 0) + (r == 0 ? 1 : 0) + (s == 0 ? 1 : 0);
+		return cases != 1;
+
 	}
 
 }

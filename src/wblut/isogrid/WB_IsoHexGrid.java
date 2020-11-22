@@ -154,6 +154,19 @@ public abstract class WB_IsoHexGrid {
 		}
 
 	}
+	
+	final void setVisibility(WB_CubeGrid cubes) {
+		for (WB_IsoGridCell cell : cells.values()) {
+			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
+				
+				if (cell.getOrientation(f) > -1)
+					for(int d=0;d<6;d++) {
+					cell.visibility[f][d] = cubes.getVisibility(cell.getI(f) ,cell.getJ(f),cell.getK(f),d);
+					}
+			}
+		}
+
+	}
 
 	final static boolean areSeparate(int orientation1, int orientation2, int palette1, int palette2, int z1, int z2) {
 		return orientation1 != orientation2 || palette1 != palette2 || Math.abs(z1 - z2) > 1;

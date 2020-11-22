@@ -20,6 +20,7 @@ public class WB_IsoGridCell {
 	
 	protected int[] region;
 	protected int[] part;
+	protected double[][] visibility;
 	protected double[] drop;
 
 
@@ -43,6 +44,7 @@ public class WB_IsoGridCell {
 		region = new int[numTriangles];
 		part = new int[numTriangles];
 		drop = new double[numTriangles];
+		visibility = new double[numTriangles][6];
 		
 		for (int f = 0; f < numTriangles; f++) {
 			i[f] = -Integer.MAX_VALUE;
@@ -57,6 +59,7 @@ public class WB_IsoGridCell {
 			region[f] = -1;
 			drop[f] = -1;
 			part[f] = -1;
+			visibility[f] = new double[] {0,0,0,0,0,0};
 		}
 	}
 	
@@ -161,6 +164,10 @@ public class WB_IsoGridCell {
 
 	public double getDrop(int f) {
 		return drop[f];
+	}
+	
+	public double getVisibility(int f,int dir) {
+		return visibility[f][dir];
 	}
 
 	public boolean isEmpty() {

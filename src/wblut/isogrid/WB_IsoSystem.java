@@ -35,8 +35,8 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 	}
 
-	WB_IsoSystem(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
-			boolean full, PApplet home) {
+	WB_IsoSystem(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed, boolean full,
+			PApplet home) {
 		randomGen = RandomSource.create(RandomSource.MT);
 		state = randomGen.saveState();
 		this.home = home;
@@ -62,9 +62,8 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 	}
 
-	WB_IsoSystem(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
-			PApplet home) {
-		this(L,I,J,K,centerX,centerY,colors, seed,true,home);
+	WB_IsoSystem(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed, PApplet home) {
+		this(L, I, J, K, centerX, centerY, colors, seed, true, home);
 
 	}
 
@@ -79,7 +78,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		IJK = I * J * K;
 		this.colors = new int[iso.colors.length];
 		System.arraycopy(iso.colors, 0, this.colors, 0, iso.colors.length);
-		this.numPalettes=iso.numPalettes;
+		this.numPalettes = iso.numPalettes;
 		this.centerX = iso.centerX;
 		this.centerY = iso.centerY;
 		this.cubes = new WB_CubeGrid(iso.cubes);
@@ -101,23 +100,23 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 	public WB_IsoHexGrid getGrid() {
 		return grid;
-		
+
 	}
-	
+
 	abstract int getNumberOfTriangles();
 
 	public int getNumberOfParts() {
 		return numParts;
 	}
-	
+
 	public int getNumberOfRegions() {
 		return numRegions;
 	}
-	
+
 	public int getNumberOfPalettes() {
 		return numPalettes;
 	}
-	
+
 	final public void setRNGSeed(long seed) {
 		randomGen = RandomSource.create(RandomSource.MT, seed);
 		state = randomGen.saveState();
@@ -130,6 +129,14 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	final void map() {
 		if (!deferred()) {
 			mapVoxelsToHexGrid();
+			cubes.reset();
+			numParts = cubes.labelParts();
+			grid.setParts(cubes);
+			numRegions = ((this.getNumberOfTriangles() == 3) ? 3 : 10) * numParts;
+			cubes.setVisibility();
+			grid.setVisibility(cubes);
+			grid.collectRegions();
+			grid.collectLines();
 		}
 	}
 
@@ -157,9 +164,9 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		Collections.reverse(cubeList);
 		return cubeList;
 	}
-	
+
 	public void fill() {
-		set(0,0,0,I,J,K);
+		set(0, 0, 0, I, J, K);
 		map();
 	}
 
@@ -730,11 +737,13 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		for (int i = si; i < si + di; i++) {
 			for (int j = sj; j < sj + dj; j++) {
 				for (int k = sk; k < sk + dk; k++) {
-					if (cubes.isWall(i, j, k)) {
-						cubes.setBuffer(i, j, k, true);
-					} else {
+					if (index(i, j, k) > -1) {
+						if (cubes.isWall(i, j, k)) {
+							cubes.setBuffer(i, j, k, true);
+						} else {
 
-						cubes.setBuffer(i, j, k, false);
+							cubes.setBuffer(i, j, k, false);
+						}
 					}
 				}
 			}
@@ -747,8 +756,9 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 			for (int j = sj; j < sj + dj; j++) {
 				for (int k = sk; k < sk + dk; k++) {
 					index = index(i, j, k);
+					if (index > -1) {
 					cubes.setBuffer(index, cubes.get(index));
-
+					}
 				}
 			}
 		}
@@ -795,11 +805,13 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		for (int i = si; i < si + di; i++) {
 			for (int j = sj; j < sj + dj; j++) {
 				for (int k = sk; k < sk + dk; k++) {
+					if (index(i,j,k) > -1) {
 					if (cubes.isEdge(i, j, k)) {
 						cubes.setBuffer(i, j, k, true);
 					} else {
 
 						cubes.setBuffer(i, j, k, false);
+					}
 					}
 				}
 			}
@@ -842,8 +854,10 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				if (random(1.0) < chance) {
 					for (int cj = 0; cj < dj; cj++) {
 						for (int ck = 0; ck < dk; ck++) {
-							openLeftI(j + cj, k + ck);
-							openRightI(j + cj, k + ck);
+							if(j+cj<J && k+ck<K) {
+								openLeftI(j + cj, k + ck);
+							    openRightI(j + cj, k + ck);
+							}
 						}
 					}
 				}
@@ -858,8 +872,10 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				if (random(1.0) < chance) {
 					for (int ci = 0; ci < di; ci++) {
 						for (int ck = 0; ck < dk; ck++) {
+							if(i+ci<I && k+ck<K) {
 							openLeftJ(i + ci, k + ck);
 							openRightJ(i + ci, k + ck);
+							}
 						}
 					}
 				}
@@ -874,8 +890,10 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				if (random(1.0) < chance) {
 					for (int ci = 0; ci < di; ci++) {
 						for (int cj = 0; cj < dj; cj++) {
+							if(j+cj<J && i+ci<I) {
 							openLeftK(i + ci, j + cj);
 							openRightK(i + ci, j + cj);
+							}
 						}
 					}
 				}
@@ -910,7 +928,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 	void openLeftJ(int i, int k) {
 		int j = 0;
-		while (j < J && !cubes.get(i, j, k)) {
+		while (index(i,j,k)>-1 && !cubes.get(i, j, k)) {
 			j++;
 		}
 		if (j == J)
@@ -1293,7 +1311,6 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		}
 	}
 
-	
 	final public void drawTriangles(WB_IsoColor colors) {
 		double[] center;
 		for (WB_IsoGridCell cell : grid.cells.values()) {
@@ -1301,19 +1318,18 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
 				if (cell.orientation[f] > -1) {
 					home.beginShape(PConstants.TRIANGLES);
-					home.fill(colors.color(home.g,cell,f));
+					home.fill(colors.color(home.g, cell, f));
 					triVertices(center, f);
 					home.endShape();
 				}
 			}
 		}
 	}
-	
-	
+
 	final public void drawTriangles(PImage[] textures) {
-		drawTriangles(1,1,1, textures);
+		drawTriangles(1, 1, 1, textures);
 	}
-	
+
 	final public void drawTriangles(double scaleI, double scaleJ, double scaleK, PImage[] textures) {
 		double[] center;
 		int offsetU, offsetV;
@@ -1331,17 +1347,17 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 					switch (cell.getTriangleUDirection(f)) {
 					case 0:
-						scaleU = 1.0 / Math.max(1.0, scaleI*I);
+						scaleU = 1.0 / Math.max(1.0, scaleI * I);
 
 						break;
 
 					case 1:
-						scaleU = 1.0 / Math.max(1.0, scaleJ*J);
+						scaleU = 1.0 / Math.max(1.0, scaleJ * J);
 
 						break;
 
 					case 2:
-						scaleU = 1.0 / Math.max(1.0, scaleK*K);
+						scaleU = 1.0 / Math.max(1.0, scaleK * K);
 						break;
 
 					default:
@@ -1351,17 +1367,17 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 					switch (cell.getTriangleVDirection(f)) {
 					case 0:
-						scaleV = 1.0 / Math.max(1.0, scaleI*I);
+						scaleV = 1.0 / Math.max(1.0, scaleI * I);
 
 						break;
 
 					case 1:
-						scaleV = 1.0 / Math.max(1.0, scaleJ*J);
+						scaleV = 1.0 / Math.max(1.0, scaleJ * J);
 
 						break;
 
 					case 2:
-						scaleV = 1.0 / Math.max(1.0, scaleK*K);
+						scaleV = 1.0 / Math.max(1.0, scaleK * K);
 
 						break;
 
@@ -1384,12 +1400,12 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 			}
 		}
 	}
-	
+
 	final public void drawTriangles(PImage[] textures, WB_IsoColor color) {
-		drawTriangles(1,1,1,textures, color);
-	
+		drawTriangles(1, 1, 1, textures, color);
+
 	}
-	
+
 	final public void drawTriangles(double scaleI, double scaleJ, double scaleK, PImage[] textures, WB_IsoColor color) {
 		double[] center;
 		int offsetU, offsetV;
@@ -1400,7 +1416,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				if (cell.orientation[f] > -1) {
 
 					home.beginShape(PConstants.TRIANGLES);
-					home.tint(color.color(home.g,cell,f));
+					home.tint(color.color(home.g, cell, f));
 					home.texture(textures[cell.orientation[f]]);
 
 					offsetU = cell.getTriangleUOffset(f);
@@ -1408,17 +1424,17 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 					switch (cell.getTriangleUDirection(f)) {
 					case 0:
-						scaleU = 1.0 / Math.max(1.0, scaleI*I);
+						scaleU = 1.0 / Math.max(1.0, scaleI * I);
 
 						break;
 
 					case 1:
-						scaleU = 1.0 / Math.max(1.0, scaleJ*J);
+						scaleU = 1.0 / Math.max(1.0, scaleJ * J);
 
 						break;
 
 					case 2:
-						scaleU = 1.0 / Math.max(1.0, scaleK*K);
+						scaleU = 1.0 / Math.max(1.0, scaleK * K);
 						break;
 
 					default:
@@ -1428,24 +1444,24 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 					switch (cell.getTriangleVDirection(f)) {
 					case 0:
-						scaleV = 1.0 / Math.max(1.0, scaleI*I);
+						scaleV = 1.0 / Math.max(1.0, scaleI * I);
 
 						break;
 
 					case 1:
-						scaleV = 1.0 / Math.max(1.0, scaleJ*J);
+						scaleV = 1.0 / Math.max(1.0, scaleJ * J);
 
 						break;
 
 					case 2:
-						scaleV = 1.0 / Math.max(1.0, scaleK*K);
+						scaleV = 1.0 / Math.max(1.0, scaleK * K);
 
 						break;
 
 					default:
 						scaleV = 1.0;
 					}
-					
+
 					grid.triVertex(home.g, f, 0, center[0], center[1], L, (YFLIP ? -1.0 : 1.0) * L,
 							scaleU * (cell.getTriangleU(f, 0) + offsetU),
 							(YFLIP ? -1.0 : 1.0) * scaleV * (cell.getTriangleV(f, 0) + offsetV));
@@ -1460,6 +1476,13 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				}
 			}
 		}
+	}
+
+	final public void centerGrid() {
+		double[] center = grid.getGridCoordinates(I / 2.0 - K / 2.0, J / 2.0 - K / 2.0, centerX, centerY, L,
+				(YFLIP ? -1.0 : 1.0) * L);
+		home.translate((float) (centerX - center[0]), (float) (centerY - (float) center[1]));
+
 	}
 
 	final public double[] getGridCoordinates(double q, double r) {
@@ -1479,8 +1502,6 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		}
 	}
 
-
-
 	final double random(double v) {
 		return randomGen.nextDouble() * v;
 	}
@@ -1488,63 +1509,64 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	final double random(double v, double w) {
 		return v + randomGen.nextDouble() * (w - v);
 	}
-	
-	
+
 	int[] createDualPalette(int[] palette) {
-		if(palette.length%3!=0) throw new IllegalArgumentException("Palette length should be a mutiple of 3.");
+		if (palette.length % 3 != 0)
+			throw new IllegalArgumentException("Palette length should be a mutiple of 3.");
 		home.pushStyle();
-		home.colorMode(PConstants.RGB);  
-		int numberOfPalettes=palette.length/3;
-		  int[] colors=new int[10*numberOfPalettes*10];
-		  float hsqrt2=(float)Math.sqrt(2.0)*0.5f;
-		  float hsqrt3=(float)Math.sqrt(3.0)*0.5f;
+		home.colorMode(PConstants.RGB);
+		int numberOfPalettes = palette.length / 3;
+		int[] colors = new int[10 * numberOfPalettes * 10];
+		float hsqrt2 = (float) Math.sqrt(2.0) * 0.5f;
+		float hsqrt3 = (float) Math.sqrt(3.0) * 0.5f;
 
-		  float[][] normals=new float[10][3];
+		float[][] normals = new float[10][3];
 
-		  normals[0]= new float[]{1, 0, 0};
-		  normals[1]= new float[]{0, 1, 0};
-		  normals[2]= new float[]{0, 0, 1};
-		  normals[3]= new float[]{hsqrt2, hsqrt2, 0};
-		  normals[4]= new float[]{hsqrt2, 0, hsqrt2};
-		  normals[5]= new float[]{0, hsqrt2, hsqrt2};
-		  normals[6]= new float[]{hsqrt3, hsqrt3, hsqrt3};
-		  normals[7]= new float[]{-hsqrt3, hsqrt3, hsqrt3};
-		  normals[8]= new float[]{hsqrt3, -hsqrt3, hsqrt3};
-		  normals[9]= new float[]{hsqrt3, hsqrt3, -hsqrt3};
+		normals[0] = new float[] { 1, 0, 0 };
+		normals[1] = new float[] { 0, 1, 0 };
+		normals[2] = new float[] { 0, 0, 1 };
+		normals[3] = new float[] { hsqrt2, hsqrt2, 0 };
+		normals[4] = new float[] { hsqrt2, 0, hsqrt2 };
+		normals[5] = new float[] { 0, hsqrt2, hsqrt2 };
+		normals[6] = new float[] { hsqrt3, hsqrt3, hsqrt3 };
+		normals[7] = new float[] { -hsqrt3, hsqrt3, hsqrt3 };
+		normals[8] = new float[] { hsqrt3, -hsqrt3, hsqrt3 };
+		normals[9] = new float[] { hsqrt3, hsqrt3, -hsqrt3 };
 
-		  for(int p=0;p<numberOfPalettes;p++) {
-		
-		   float[][] light=new float[][]{
+		for (int p = 0; p < numberOfPalettes; p++) {
 
-		    {1, 0, 0,(palette[3*p]>> 16) & 0xff, (palette[3*p]>> 8) & 0xff, palette[3*p] & 0xff}, 
-		    {0, 1, 0,(palette[3*p+1]>> 16) & 0xff, (palette[3*p+1]>> 8) & 0xff, palette[3*p+1] & 0xff}, 
-		    {0, 0, 1,(palette[3*p+2]>> 16) & 0xff, (palette[3*p+2]>> 8) & 0xff, palette[3*p+2] & 0xff} 
-		  };
+			float[][] light = new float[][] {
 
-		  for (int i=0; i<10; i++) {
-		    float red, green, blue, dot;
-		    red=green=blue=0;
-		    for (int l=0; l<3; l++) {
-		      dot=(float)Math.max(0, normals[i][0]*light[l][0]+normals[i][1]*light[l][1]+normals[i][2]*light[l][2]);
-		      red+=dot*light[l][3];
-		      green+=dot*light[l][4];
-		      blue+=dot*light[l][5];
-		    }
+					{ 1, 0, 0, (palette[3 * p] >> 16) & 0xff, (palette[3 * p] >> 8) & 0xff, palette[3 * p] & 0xff },
+					{ 0, 1, 0, (palette[3 * p + 1] >> 16) & 0xff, (palette[3 * p + 1] >> 8) & 0xff,
+							palette[3 * p + 1] & 0xff },
+					{ 0, 0, 1, (palette[3 * p + 2] >> 16) & 0xff, (palette[3 * p + 2] >> 8) & 0xff,
+							palette[3 * p + 2] & 0xff } };
 
-		    float max=(float)Math.max(red,Math.max( green, blue));
-		    if (max>400.0f) {
-		      red*=400.0f/max; 
-		      green*=400.0f/max; 
-		      blue*=400.0f/max;
-		    }
-		    colors[10*p+i]=home.color((float)Math.max(Math.min(red, 255), 0), (float)Math.max(Math.min(green, 255), 0), (float)Math.max(Math.min(blue, 255), 0));
-		  }
-		  
-		  }
-		  home.popStyle();
-		  return colors;
+			for (int i = 0; i < 10; i++) {
+				float red, green, blue, dot;
+				red = green = blue = 0;
+				for (int l = 0; l < 3; l++) {
+					dot = (float) Math.max(0,
+							normals[i][0] * light[l][0] + normals[i][1] * light[l][1] + normals[i][2] * light[l][2]);
+					red += dot * light[l][3];
+					green += dot * light[l][4];
+					blue += dot * light[l][5];
+				}
+
+				float max = (float) Math.max(red, Math.max(green, blue));
+				if (max > 400.0f) {
+					red *= 400.0f / max;
+					green *= 400.0f / max;
+					blue *= 400.0f / max;
+				}
+				colors[10 * p + i] = home.color((float) Math.max(Math.min(red, 255), 0),
+						(float) Math.max(Math.min(green, 255), 0), (float) Math.max(Math.min(blue, 255), 0));
+			}
+
 		}
+		home.popStyle();
+		return colors;
+	}
 
-	
-	
 }
