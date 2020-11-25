@@ -108,7 +108,7 @@ public class WB_PixelFont {
 			for (int i = 0; i < 3; i++) {
 				if (((code >> id) & 1) == 1) {
 					for (int k = 0; k < thickness; k++) {
-						grid[flipX?2-i:1][flipY?2-j:1][k] = true;
+						grid[flipX?2-i:i][flipY?2-j:j][k] = true;
 					}
 				}
 				id++;
