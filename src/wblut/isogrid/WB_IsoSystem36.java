@@ -6,7 +6,7 @@ import org.apache.commons.rng.simple.RandomSource;
 
 import processing.core.PApplet;
 
-public class WB_IsoSystem36 extends WB_IsoSystem<WB_IsoHexGrid36> {
+public class WB_IsoSystem36 extends WB_IsoSystem {
 
 	boolean DUAL;
 
@@ -104,14 +104,27 @@ public class WB_IsoSystem36 extends WB_IsoSystem<WB_IsoHexGrid36> {
 				}
 			}
 		}
-
+		PARTS=true;
+		VISIBILITY=true;
 		DUAL = true;
-		mapVoxelsToHexGrid();
+		map();
 
 		DEFER = false;
 		GLOBALDEFER = false;
 		YFLIP = true;
 
+	}
+	
+	public WB_IsoSystem36( boolean[][][] pattern, int scaleI, int scaleJ, int scaleK, double L, double centerX, double centerY, int[] colors, int seed,
+			PApplet home) {
+		
+	super(pattern, scaleI, scaleJ, scaleK, L, centerX,centerY, colors, seed,home);
+		DUAL=false;
+	
+	}
+	
+	public WB_IsoSystem36(WB_IsoSystem iso, int scaleI, int scaleJ, int scaleK) {
+		super(iso, scaleI, scaleJ, scaleK);
 	}
 
 	void setGrid() {

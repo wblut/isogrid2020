@@ -11,7 +11,7 @@ void setup() {
   time=millis();
 
   //mapping the grid at every step
-  iso=new WB_IsoSystem6(2, 128, 128,128, width/2, height/2, new int[]{color(50), color(255), color(180)}, 15, false, this);
+  iso=new WB_IsoSystem6(4, 64, 128,64, width/2, height/2, new int[]{color(50), color(255), color(180)}, 15, false, this);
   iso.fill();
   iso.subdivide(0.50, 16, 32, 16);
   iso.subdivide(0.30, 8, 16, 8);
@@ -26,7 +26,7 @@ void setup() {
   time=millis();
 
   //mapping the grid at the end
-  iso=new WB_IsoSystem6(2, 128,128,128, width/2, height/2, new int[]{color(50), color(255), color(180)}, 15, false, this);
+  iso=new WB_IsoSystem6(4, 64,128,64, width/2, height/2, new int[]{color(50), color(255), color(180)}, 15, false, this);
   iso.setDeferred(true);
   iso.fill();
   iso.subdivide(0.50, 16, 32, 16);
@@ -43,6 +43,7 @@ void setup() {
 
 void draw() {
   background(255);
+  iso.centerGrid();
   stroke(0);
   strokeWeight(2);
   iso.drawOutlines();

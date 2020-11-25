@@ -10,6 +10,7 @@ public class WB_IsoGridCell {
 	private int[] k;
 	
 	protected int[] z;
+	protected int minZ;
 	protected int[] triangle;
 	protected int[] orientation;
 	protected int[] palette;
@@ -45,7 +46,7 @@ public class WB_IsoGridCell {
 		part = new int[numTriangles];
 		drop = new double[numTriangles];
 		visibility = new double[numTriangles][6];
-		
+		minZ = Integer.MAX_VALUE;
 		for (int f = 0; f < numTriangles; f++) {
 			i[f] = -Integer.MAX_VALUE;
 			j[f] = -Integer.MAX_VALUE;

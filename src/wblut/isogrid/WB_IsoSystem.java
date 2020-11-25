@@ -13,7 +13,7 @@ import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PImage;
 
-public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
+public abstract class WB_IsoSystem {
 	WB_IsoHexGrid grid;
 	WB_CubeGrid cubes;
 	double L;
@@ -30,6 +30,8 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	boolean DEFER;
 	boolean GLOBALDEFER;
 	boolean YFLIP;
+	boolean PARTS;
+	boolean VISIBILITY;
 
 	WB_IsoSystem() {
 
@@ -52,9 +54,11 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		this.cubes = new WB_CubeGrid(this.I, this.J, this.K);
 		this.seed = seed;
 		setGrid();
+		PARTS = true;
+		VISIBILITY = true;
 		if (full) {
 			set(0, 0, 0, I, J, K);
-			mapVoxelsToHexGrid();
+			map();
 		}
 		DEFER = false;
 		GLOBALDEFER = false;
@@ -67,7 +71,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 	}
 
-	WB_IsoSystem(WB_IsoSystem<IHG> iso) {
+	WB_IsoSystem(WB_IsoSystem iso) {
 		randomGen = RandomSource.create(RandomSource.MT);
 		state = randomGen.saveState();
 		this.home = iso.home;
@@ -75,7 +79,8 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		this.I = iso.I;
 		this.J = iso.J;
 		this.K = iso.K;
-		IJK = I * J * K;
+		JK = this.J * this.K;
+		IJK = this.I * JK;
 		this.colors = new int[iso.colors.length];
 		System.arraycopy(iso.colors, 0, this.colors, 0, iso.colors.length);
 		this.numPalettes = iso.numPalettes;
@@ -83,13 +88,162 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		this.centerY = iso.centerY;
 		this.cubes = new WB_CubeGrid(iso.cubes);
 		this.seed = iso.seed;
-		try {
-			grid = iso.grid.getClass().newInstance();
-		} catch (InstantiationException | IllegalAccessException e) {
+		setGrid();
+		PARTS = true;
+		VISIBILITY = true;
+		map();
+		DEFER = false;
+		GLOBALDEFER = false;
+		YFLIP = true;
 
-			e.printStackTrace();
+	}
+
+	WB_IsoSystem(WB_IsoSystem iso, int scaleI, int scaleJ, int scaleK) {
+		if (scaleI == 0 || scaleJ == 0 || scaleK == 0)
+			throw new IllegalArgumentException("Scale cannot be 0.");
+		if (Math.abs(scaleI) == 1 && Math.abs(scaleJ) == 1 && Math.abs(scaleK) == 1)
+			throw new IllegalArgumentException("At least one scale should ber different from -1 or 1.");
+		randomGen = RandomSource.create(RandomSource.MT);
+		state = randomGen.saveState();
+		this.home = iso.home;
+
+		this.L = iso.L;
+		if (scaleI > 0) {
+			I = iso.I * scaleI;
+		} else {
+			I = iso.I / Math.abs(scaleI);
 		}
-		mapVoxelsToHexGrid();
+		if (scaleJ > 0) {
+			J = iso.J * scaleJ;
+		} else {
+			J = iso.J / Math.abs(scaleJ);
+		}
+		if (scaleK > 0) {
+			K = iso.K * scaleK;
+		} else {
+			K = iso.K / Math.abs(scaleK);
+		}
+		
+		JK = this.J * this.K;
+		IJK = this.I * JK;
+		this.colors = new int[iso.colors.length];
+		System.arraycopy(iso.colors, 0, this.colors, 0, iso.colors.length);
+		this.numPalettes = iso.numPalettes;
+		this.centerX = iso.centerX;
+		this.centerY = iso.centerY;
+		this.cubes = new WB_CubeGrid(I, J, K);
+		
+		this.seed = iso.seed;
+		setGrid();
+
+		int index = 0;
+		int lookupI = -1, lookupJ = -1, lookupK = -1;
+		for (int i = 0; i < I; i++) {
+			for (int j = 0; j < J; j++) {
+				for (int k = 0; k < K; k++) {
+					if (scaleI > 0) {
+						lookupI = i / scaleI;
+					}
+					if (scaleJ > 0) {
+						lookupJ = j / scaleJ;
+					}
+					if (scaleK > 0) {
+						lookupK = k / scaleK;
+					}
+					if (getSampledValue(iso, lookupI, lookupJ, lookupK, i, j, k, Math.abs(scaleI), Math.abs(scaleJ),
+							Math.abs(scaleK))) {
+					
+						cubes.set(index, true);
+					}
+					index++;
+				}
+			}
+		}
+		DEFER = false;
+		PARTS = true;
+		VISIBILITY = true;
+		map();
+
+		GLOBALDEFER = false;
+		YFLIP = true;
+
+	}
+
+	private boolean getSampledValue(WB_IsoSystem source, int lookupI, int lookupJ, int lookupK, int i, int j, int k,
+			int scaleI, int scaleJ, int scaleK) {
+		if (lookupI >= 0 && lookupJ >= 0 && lookupK >= 0) {
+			return source.cubes.get(lookupI, lookupJ, lookupK);
+		}
+		int si, ei;
+		if (lookupI >= 0) {
+			si = ei = lookupI;
+		} else {
+			si = i * scaleI;
+			ei = i * scaleI + scaleI - 1;
+		}
+		int sj, ej;
+		if (lookupJ >= 0) {
+			sj = ej = lookupJ;
+		} else {
+			sj = j * scaleJ;
+			ej = j * scaleJ + scaleJ - 1;
+		}
+		int sk, ek;
+		if (lookupK >= 0) {
+			sk = ek = lookupK;
+		} else {
+			sk = k * scaleK;
+			ek = k * scaleK + scaleK - 1;
+		}
+
+		for (int ti = si; ti <= ei; ti++) {
+			for (int tj = sj; tj <= ej; tj++) {
+				for (int tk = sk; tk <= ek; tk++) {
+					if (source.cubes.get(ti, tj, tk))
+						return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	WB_IsoSystem(boolean[][][] pattern, int scaleI, int scaleJ, int scaleK, double L, double centerX, double centerY,
+			int[] colors, int seed, PApplet home) {
+		randomGen = RandomSource.create(RandomSource.MT);
+		state = randomGen.saveState();
+		this.home = home;
+		this.L = L;
+		I = scaleI * pattern.length;
+		if (I < 0)
+			throw new IllegalArgumentException("Pattern should be at least 1x1x1 and scale can't be zero or negative.");
+		J = scaleJ * pattern[0].length;
+		if (J < 0)
+			throw new IllegalArgumentException(
+					"Pattern should be at least 1x1x1 and scale can't be zero or negative..");
+		K = scaleK * pattern[0][0].length;
+		if (K < 0)
+			throw new IllegalArgumentException(
+					"Pattern should be at least 1x1x1 and scale can't be zero or negative..");
+		JK = this.J * this.K;
+		IJK = this.I * JK;
+		this.colors = colors;
+		this.centerX = centerX;
+		this.centerY = centerY;
+		this.cubes = new WB_CubeGrid(this.I, this.J, this.K);
+		this.seed = seed;
+		setGrid();
+		PARTS = true;
+		VISIBILITY = true;
+		for (int i = 0, pi = 0; i < I; i += scaleI, pi++) {
+			for (int j = 0, pj = 0; j < J; j += scaleJ, pj++) {
+				for (int k = 0, pk = 0; k < K; k += scaleK, pk++) {
+					if (pattern[pi][pj][pk])
+						set(i, j, k, scaleI, scaleJ, scaleK);
+				}
+			}
+		}
+		map();
+
 		DEFER = false;
 		GLOBALDEFER = false;
 		YFLIP = true;
@@ -127,17 +281,34 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	}
 
 	final void map() {
-		if (!deferred()) {
+		if (!isDeferred()) {
 			mapVoxelsToHexGrid();
-			cubes.reset();
-			numParts = cubes.labelParts();
-			grid.setParts(cubes);
-			numRegions = ((this.getNumberOfTriangles() == 3) ? 3 : 10) * numParts;
-			cubes.setVisibility();
-			grid.setVisibility(cubes);
-			grid.collectRegions();
+			if (PARTS) {
+				cubes.reset();
+				numParts = cubes.labelParts();
+				grid.setParts(cubes);
+				numRegions = ((this.getNumberOfTriangles() == 6) ? 3 : 10) * numParts;
+				grid.collectRegions();
+			}
+			if (VISIBILITY) {
+				cubes.setVisibility();
+				grid.setVisibility(cubes);
+			}
+
 			grid.collectLines();
 		}
+	}
+
+	public void smoothVisibility(double factor) {
+		cubes.smoothVisibility(factor);
+		grid.setVisibility(cubes);
+	}
+
+	public void smoothVisibility(double factor, int rep) {
+		for (int r = 0; r < rep; r++) {
+			cubes.smoothVisibility(factor);
+		}
+		grid.setVisibility(cubes);
 	}
 
 	public abstract void mapVoxelsToHexGrid();
@@ -146,8 +317,16 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		GLOBALDEFER = b;
 	}
 
-	public boolean deferred() {
+	public boolean isDeferred() {
 		return DEFER || GLOBALDEFER;
+	}
+
+	public void setParts(boolean b) {
+		PARTS = b;
+	}
+
+	public void setVisibility(boolean b) {
+		VISIBILITY = b;
 	}
 
 	public void setYFlip(boolean b) {
@@ -757,7 +936,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				for (int k = sk; k < sk + dk; k++) {
 					index = index(i, j, k);
 					if (index > -1) {
-					cubes.setBuffer(index, cubes.get(index));
+						cubes.setBuffer(index, cubes.get(index));
 					}
 				}
 			}
@@ -805,13 +984,13 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		for (int i = si; i < si + di; i++) {
 			for (int j = sj; j < sj + dj; j++) {
 				for (int k = sk; k < sk + dk; k++) {
-					if (index(i,j,k) > -1) {
-					if (cubes.isEdge(i, j, k)) {
-						cubes.setBuffer(i, j, k, true);
-					} else {
+					if (index(i, j, k) > -1) {
+						if (cubes.isEdge(i, j, k)) {
+							cubes.setBuffer(i, j, k, true);
+						} else {
 
-						cubes.setBuffer(i, j, k, false);
-					}
+							cubes.setBuffer(i, j, k, false);
+						}
 					}
 				}
 			}
@@ -854,9 +1033,9 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				if (random(1.0) < chance) {
 					for (int cj = 0; cj < dj; cj++) {
 						for (int ck = 0; ck < dk; ck++) {
-							if(j+cj<J && k+ck<K) {
+							if (j + cj < J && k + ck < K) {
 								openLeftI(j + cj, k + ck);
-							    openRightI(j + cj, k + ck);
+								openRightI(j + cj, k + ck);
 							}
 						}
 					}
@@ -872,9 +1051,9 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				if (random(1.0) < chance) {
 					for (int ci = 0; ci < di; ci++) {
 						for (int ck = 0; ck < dk; ck++) {
-							if(i+ci<I && k+ck<K) {
-							openLeftJ(i + ci, k + ck);
-							openRightJ(i + ci, k + ck);
+							if (i + ci < I && k + ck < K) {
+								openLeftJ(i + ci, k + ck);
+								openRightJ(i + ci, k + ck);
 							}
 						}
 					}
@@ -890,9 +1069,9 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 				if (random(1.0) < chance) {
 					for (int ci = 0; ci < di; ci++) {
 						for (int cj = 0; cj < dj; cj++) {
-							if(j+cj<J && i+ci<I) {
-							openLeftK(i + ci, j + cj);
-							openRightK(i + ci, j + cj);
+							if (j + cj < J && i + ci < I) {
+								openLeftK(i + ci, j + cj);
+								openRightK(i + ci, j + cj);
 							}
 						}
 					}
@@ -928,7 +1107,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 	void openLeftJ(int i, int k) {
 		int j = 0;
-		while (index(i,j,k)>-1 && !cubes.get(i, j, k)) {
+		while (index(i, j, k) > -1 && !cubes.get(i, j, k)) {
 			j++;
 		}
 		if (j == J)
@@ -976,6 +1155,19 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 
 	public void refresh() {
 		mapVoxelsToHexGrid();
+		if (PARTS) {
+			cubes.reset();
+			numParts = cubes.labelParts();
+			grid.setParts(cubes);
+			numRegions = ((this.getNumberOfTriangles() == 6) ? 3 : 10) * numParts;
+			grid.collectRegions();
+		}
+		if (VISIBILITY) {
+			cubes.setVisibility();
+			grid.setVisibility(cubes);
+		}
+
+		grid.collectLines();
 	}
 
 	public void set(int i, int j, int k, int blocki, int blockj, int blockk) {
@@ -1090,6 +1282,29 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 	public void not(int i, int j, int k) {
 		cubes.not(i, j, k);
 		map();
+	}
+
+	public void setPattern(boolean[][][] pattern, int i, int j, int k, int scaleI, int scaleJ, int scaleK,
+			boolean flipI, boolean flipJ, boolean flipK) {
+		int I = pattern.length;
+		if (I == 0)
+			return;
+		int J = pattern[0].length;
+		if (J == 0)
+			return;
+		int K = pattern[0][0].length;
+		if (K == 0)
+			return;
+
+		for (int ci = 0; ci < I; ci++) {
+			for (int cj = 0; cj < J; cj++) {
+				for (int ck = 0; ck < K; ck++) {
+					if (pattern[ci][cj][ck])
+						set(i + (flipI ? I - 1 - ci : ci) * scaleI, j + (flipJ ? J - 1 - cj : cj) * scaleJ,
+								k + (flipK ? K - 1 - ck : ck) * scaleK, scaleI, scaleJ, scaleK);
+				}
+			}
+		}
 	}
 
 	final public void drawOrientation(int q, int r, double dx, double dy) {
@@ -1303,7 +1518,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
 				if (cell.orientation[f] > -1) {
 					home.beginShape(PConstants.TRIANGLES);
-					home.fill(colors[cell.palette[f] * ((getNumberOfTriangles() == 3) ? 3 : 10) + cell.orientation[f]]);
+					home.fill(colors[cell.palette[f] * ((getNumberOfTriangles() == 6) ? 3 : 10) + cell.orientation[f]]);
 					triVertices(center, f);
 					home.endShape();
 				}
@@ -1516,7 +1731,7 @@ public abstract class WB_IsoSystem<IHG extends WB_IsoHexGrid> {
 		home.pushStyle();
 		home.colorMode(PConstants.RGB);
 		int numberOfPalettes = palette.length / 3;
-		int[] colors = new int[10 * numberOfPalettes * 10];
+		int[] colors = new int[10 * numberOfPalettes];
 		float hsqrt2 = (float) Math.sqrt(2.0) * 0.5f;
 		float hsqrt3 = (float) Math.sqrt(3.0) * 0.5f;
 

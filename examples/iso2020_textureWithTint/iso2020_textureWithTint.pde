@@ -15,7 +15,8 @@ void setup() {
   iso.layerJBlocks(0.5,8,2,8,8,16);
   iso.layerKBlocks(0.25,16,4,16,32,8);
   iso.sliceJAll(8,1);
-  isoColor=new WB_IsoColor(new HueByRegion(),255, new BrightnessByDepth(), new AlphaNoise());
+  //alpha channel determines how strong the tinting color is
+  isoColor=new WB_IsoColor(new HueByRegion(),255, 255, 255);
   colorMode(HSB);
   textureMode(NORMAL);
   textureWrap(REPEAT);
@@ -36,17 +37,5 @@ void draw() {
 class HueByRegion implements WB_ColorChannel{
   float value(WB_IsoGridCell cell, int triangle){
    return (cell.getRegion(triangle)*17)%256;
-  }  
-}
-
-class BrightnessByDepth implements WB_ColorChannel{
-  float value(WB_IsoGridCell cell, int triangle){
-   return cell.getZ(triangle)*255./(3*63);
-  }  
-}
-
-class AlphaNoise implements WB_ColorChannel{
-  float value(WB_IsoGridCell cell, int triangle){
-   return 80+200.0*noise(cell.getI(triangle)/32.0,cell.getJ(triangle)/32.0,cell.getK(triangle)/32.0);
   }  
 }

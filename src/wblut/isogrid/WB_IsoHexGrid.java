@@ -75,12 +75,13 @@ public abstract class WB_IsoHexGrid {
 		int maxRegion = -1;
 		for (WB_IsoGridCell cell : cells.values()) {
 			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-				if (cell.getOrientation(f) != -1) {
-					cell.region[f] =( cell.getNumberOfTriangles()==3?3:10) * cell.getPart(f) + cell.getOrientation(f);
+				if (cell.getOrientation(f) != -1 && cell.getPart(f)!=-1) {
+					cell.region[f] =( cell.getNumberOfTriangles()==6?3:10) * cell.getPart(f) + cell.getOrientation(f);
 					maxRegion = Math.max(cell.region[f], maxRegion);
 				} else {
 					cell.region[f] = -1;
 				}
+				
 			}
 		}
 		
@@ -96,7 +97,8 @@ public abstract class WB_IsoHexGrid {
 		
 			for (WB_IsoGridCell cell : cells.values()) {
 				for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-					if (cell.getOrientation(f) != -1 ) {
+					if (cell.getRegion(f) != -1 ) {
+						
 						regionRange[cell.getRegion(f)][0] = Math.min(regionRange[cell.getRegion(f)][0],
 								cell.getIndices(f)[0]);
 						regionRange[cell.getRegion(f)][2] = Math.min(regionRange[cell.getRegion(f)][2],
@@ -117,7 +119,7 @@ public abstract class WB_IsoHexGrid {
 			
 			for (WB_IsoGridCell cell : cells.values()) {
 				for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-					if (cell.getOrientation(f) != -1) {
+					if (cell.getRegion(f) != -1) {
 						cell.drop[f] =(regionRange[cell.getRegion(f)][3]-regionRange[cell.getRegion(f)][2])==0||cell.getOrientation(f)==1?1.0:(cell.getIndices(f)[1]- regionRange[cell.getRegion(f)][2] )/(double)( regionRange[cell.getRegion(f)][3]-regionRange[cell.getRegion(f)][2]);
 					}
 				}

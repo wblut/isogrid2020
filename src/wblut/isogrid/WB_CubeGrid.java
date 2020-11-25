@@ -21,6 +21,11 @@ public class WB_CubeGrid {
 	boolean[] visited;
 	int[] parts;
 	double[][] visibility;
+	double[][] visibilityBuffer;
+	
+	private WB_CubeGrid() {
+	
+	}
 
 	public WB_CubeGrid(int I, int J, int K) {
 
@@ -37,6 +42,7 @@ public class WB_CubeGrid {
 		paletteBuffer = new int[IJK];
 		parts = new int[IJK];
 		visibility = new double[IJK][6];
+		visibilityBuffer = null;
 	}
 
 	public WB_CubeGrid(WB_CubeGrid cubes) {
@@ -230,20 +236,11 @@ public class WB_CubeGrid {
 
 	public void setVisibility() {
 		setMaxVisibilityAtBoundaries();
-		int index=0;
-		for (int i = 0; i < I; i++) {
-			for (int j = 0; j < J; j++) {
-				for (int k = 0; k < K; k++) {
-					if(getVisibility(index,0)<I) setVisibility(index,0,scanILeft(i,index));
-					if(getVisibility(index,1)<I) setVisibility(index,1,scanIRight(i,index));
-					if(getVisibility(index,2)<J) setVisibility(index,2,scanJLeft(j,index));
-					if(getVisibility(index,3)<J) setVisibility(index,3,scanJRight(j,index));
-					if(getVisibility(index,4)<K) setVisibility(index,4,scanKLeft(k,index));
-					if(getVisibility(index,5)<K) setVisibility(index,5,scanKRight(k,index));
-					index++;
-				}
-			}
-		}
+		scanInteriorCubes();
+		
+		
+
+		bleedVisibility(0.5);
 
 	}
 
@@ -314,8 +311,143 @@ public class WB_CubeGrid {
 			}
 		}
 	}
+	
+	void scanInteriorCubes() {
+		int index = 0;
+		for (int i = 0; i < I; i++) {
+			for (int j = 0; j < J; j++) {
+				for (int k = 0; k < K; k++) {
+					if (getVisibility(index, 0) < I)
+						setVisibility(index, 0, scanILeft(i, index));
+					if (getVisibility(index, 1) < I)
+						setVisibility(index, 1, scanIRight(i, index));
+					if (getVisibility(index, 2) < J)
+						setVisibility(index, 2, scanJLeft(j, index));
+					if (getVisibility(index, 3) < J)
+						setVisibility(index, 3, scanJRight(j, index));
+					if (getVisibility(index, 4) < K)
+						setVisibility(index, 4, scanKLeft(k, index));
+					if (getVisibility(index, 5) < K)
+						setVisibility(index, 5, scanKRight(k, index));
+
+					setVisibility(index, 0, getVisibility(index, 0) / I);
+					setVisibility(index, 1, getVisibility(index, 1) / I);
+					setVisibility(index, 2, getVisibility(index, 2) / J);
+					setVisibility(index, 3, getVisibility(index, 3) / J);
+					setVisibility(index, 4, getVisibility(index, 4) / K);
+					setVisibility(index, 5, getVisibility(index, 5) / K);
+
+					index++;
+				}
+			}
+		}
+		
+	}
+
+	void bleedVisibility(double bleedFactor) {
+		if (visibilityBuffer == null) {
+			visibilityBuffer = new double[visibility.length][6];
+		}
+		int index = 0;
+		for (int i = 0; i < I; i++) {
+			for (int j = 0; j < J; j++) {
+				for (int k = 0; k < K; k++) {
+					for (int side = 0; side < 6; side++) {
+						visibilityBuffer[index][side] = visibility[index][side];
+					
+					}
+					for (int side = 0; side < 6; side++) {
+						for (int oside = 0; oside < 6; oside++) {
+							if(side/2!=oside/2) {
+								visibilityBuffer[index][side] += bleedFactor * visibility[index][oside];
+							}
+						}
+					
+					}
+				
+					
+					
+					if (j > 0) {
+						visibilityBuffer[index][0] += bleedFactor * visibility[index-K][2];
+						visibilityBuffer[index][1] += bleedFactor * visibility[index - K][2];
+						
+					}
+					if (j < J - 1) {
+						visibilityBuffer[index][0] += bleedFactor * visibility[index + K][3];
+						visibilityBuffer[index][1] += bleedFactor * visibility[index + K][3];
+						
+					}
+					if (k > 0) {
+						visibilityBuffer[index][0] += bleedFactor * visibility[index - 1][4];
+						visibilityBuffer[index][1] += bleedFactor * visibility[index - 1][4];
+						
+					}
+					if (k < K - 1) {
+						visibilityBuffer[index][0] += bleedFactor * visibility[index + 1][5];
+						visibilityBuffer[index][1] += bleedFactor * visibility[index + 1][5];
+						
+					}
+					visibilityBuffer[index][0] = Math.min(visibilityBuffer[index][0],1.0);
+					visibilityBuffer[index][1] = Math.min(visibilityBuffer[index][1],1.0);
+
+					
+					if (i > 0) {
+						visibilityBuffer[index][2] += bleedFactor * visibility[index - JK][0];
+						visibilityBuffer[index][3] += bleedFactor * visibility[index - JK][0];
+					
+					}
+					if (i < I - 1) {
+						visibilityBuffer[index][2] += bleedFactor * visibility[index + JK][1];
+						visibilityBuffer[index][3] += bleedFactor * visibility[index + JK][1];
+						
+					}
+					if (k > 0) {
+						visibilityBuffer[index][2] += bleedFactor * visibility[index - 1][4];
+						visibilityBuffer[index][3] += bleedFactor * visibility[index - 1][4];
+						
+					}
+					if (k < K - 1) {
+						visibilityBuffer[index][2] += bleedFactor * visibility[index + 1][5];
+						visibilityBuffer[index][3] += bleedFactor * visibility[index + 1][5];
+						
+					}
+					visibilityBuffer[index][2] = Math.min(visibilityBuffer[index][2],1.0);
+					visibilityBuffer[index][3] = Math.min(visibilityBuffer[index][3],1.0);
 
 
+				
+					if (i > 0) {
+						visibilityBuffer[index][4] += bleedFactor * visibility[index - JK][0];
+						visibilityBuffer[index][5] += bleedFactor * visibility[index - JK][0];
+						
+					}
+					if (i < I - 1) {
+						visibilityBuffer[index][4] += bleedFactor * visibility[index + JK][1];
+						visibilityBuffer[index][5] += bleedFactor * visibility[index + JK][1];
+						
+					}
+					if (j > 0) {
+						visibilityBuffer[index][4] += bleedFactor * visibility[index - K][2];
+						visibilityBuffer[index][5] += bleedFactor * visibility[index - K][2];
+						
+					}
+					if (j < J - 1) {
+						visibilityBuffer[index][4] += bleedFactor * visibility[index + K][3];
+						visibilityBuffer[index][5] += bleedFactor * visibility[index + K][3];
+						
+					}
+					visibilityBuffer[index][4] = Math.min(visibilityBuffer[index][4],1.0);
+					visibilityBuffer[index][5] = Math.min(visibilityBuffer[index][5],1.0);
+
+
+					index++;
+				}
+			}
+		}
+		double[][] tmp = visibility;
+		visibility = visibilityBuffer;
+		visibilityBuffer = tmp;
+	}
 
 	int scanILeft(int i, int index) {
 		int count = 0;
@@ -383,7 +515,99 @@ public class WB_CubeGrid {
 		}
 		return count;
 	}
-	
+
+	void smoothVisibility(double smoothFactor) {
+		if (visibilityBuffer == null) {
+			visibilityBuffer = new double[visibility.length][6];
+		}
+		int index = 0;
+		double w;
+		for (int i = 0; i < I; i++) {
+			for (int j = 0; j < J; j++) {
+				for (int k = 0; k < K; k++) {
+					for (int side = 0; side < 6; side++) {
+						visibilityBuffer[index][side] = visibility[index][side];
+					}
+					w = 1.0;
+					if (j > 0 ) {
+						visibilityBuffer[index][0] += smoothFactor * visibility[index - K][0];
+						visibilityBuffer[index][1] += smoothFactor * visibility[index - K][1];
+						w += smoothFactor;
+					}
+					if (j < J - 1) {
+						visibilityBuffer[index][0] += smoothFactor * visibility[index + K][0];
+						visibilityBuffer[index][1] += smoothFactor * visibility[index + K][1];
+						w += smoothFactor;
+					}
+					if (k > 0) {
+						visibilityBuffer[index][0] += smoothFactor * visibility[index - 1][0];
+						visibilityBuffer[index][1] += smoothFactor * visibility[index - 1][1];
+						w += smoothFactor;
+					}
+					if (k < K - 1) {
+						visibilityBuffer[index][0] += smoothFactor * visibility[index + 1][0];
+						visibilityBuffer[index][1] += smoothFactor * visibility[index + 1][1];
+						w += smoothFactor;
+					}
+					visibilityBuffer[index][0] /= w;
+					visibilityBuffer[index][1] /= w;
+
+					w = 1.0;
+					if (i > 0) {
+						visibilityBuffer[index][2] += smoothFactor * visibility[index - JK][2];
+						visibilityBuffer[index][3] += smoothFactor * visibility[index - JK][3];
+						w += smoothFactor;
+					}
+					if (i < I - 1) {
+						visibilityBuffer[index][2] += smoothFactor * visibility[index + JK][2];
+						visibilityBuffer[index][3] += smoothFactor * visibility[index + JK][3];
+						w += smoothFactor;
+					}
+					if (k > 0) {
+						visibilityBuffer[index][2] += smoothFactor * visibility[index - 1][2];
+						visibilityBuffer[index][3] += smoothFactor * visibility[index - 1][3];
+						w += smoothFactor;
+					}
+					if (k < K - 1) {
+						visibilityBuffer[index][2] += smoothFactor * visibility[index + 1][2];
+						visibilityBuffer[index][3] += smoothFactor * visibility[index + 1][3];
+						w += smoothFactor;
+					}
+					visibilityBuffer[index][2] /= w;
+					visibilityBuffer[index][3] /= w;
+
+					w = 1.0;
+					if (i > 1) {
+						visibilityBuffer[index][4] += smoothFactor * visibility[index - JK][4];
+						visibilityBuffer[index][5] += smoothFactor * visibility[index - JK][5];
+						w += smoothFactor;
+					}
+					if (i < I - 1) {
+						visibilityBuffer[index][4] += smoothFactor * visibility[index + JK][4];
+						visibilityBuffer[index][5] += smoothFactor * visibility[index + JK][5];
+						w += smoothFactor;
+					}
+					if (j > 01) {
+						visibilityBuffer[index][4] += smoothFactor * visibility[index - K][4];
+						visibilityBuffer[index][5] += smoothFactor * visibility[index - K][5];
+						w += smoothFactor;
+					}
+					if (j < J - 1) {
+						visibilityBuffer[index][4] += smoothFactor * visibility[index + K][4];
+						visibilityBuffer[index][5] += smoothFactor * visibility[index + K][5];
+						w += smoothFactor;
+					}
+					visibilityBuffer[index][4] /= w;
+					visibilityBuffer[index][5] /= w;
+
+					index++;
+				}
+			}
+		}
+		double[][] tmp = visibility;
+		visibility = visibilityBuffer;
+		visibilityBuffer = tmp;
+	}
 
 	public double getVisibility(int i, int j, int k, int side) {
 		return visibility[index(i, j, k)][side];
@@ -392,13 +616,13 @@ public class WB_CubeGrid {
 	public double getVisibility(int id, int side) {
 		return visibility[id][side];
 	}
-	
-	public void setVisibility(int i,int j, int k, int side, double value) {
-		visibility[index(i,j,k)][side]=value;
+
+	public void setVisibility(int i, int j, int k, int side, double value) {
+		visibility[index(i, j, k)][side] = value;
 	}
-	
+
 	public void setVisibility(int id, int side, double value) {
-		visibility[id][side]=value;
+		visibility[id][side] = value;
 	}
 
 	void reset() {

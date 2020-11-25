@@ -13,6 +13,7 @@ void setup() {
   iso.openKAll();  
   iso.openJAll();
   iso.openKAll();
+
   colorMode(HSB);
   //Brightness of color determined by orientation
   isoColor=new WB_IsoColor(32, 255, new BrightnessByOrientation());

@@ -115,7 +115,9 @@ public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 
 	
 
 	public void addCube(int i, int j, int k, int...params) {
-
+int palette=params[0];
+		
+		
 		int z = i + j + k;
 		int q = i - k;
 		int r = j - k;
@@ -134,7 +136,7 @@ public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 
 		case 0:
 			for (int s = 0; s < 6; s++) {
 				if (triangleOrientations[s] >= 0)
-					addTriangle(q, r, s, s, z, triangleOrientations[s], params[0], i, j, k);
+					addTriangle(q, r, s, s, z, triangleOrientations[s], palette, i, j, k);
 			}
 			break;
 
@@ -143,7 +145,7 @@ public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 
 				ns = mapTrianglesFromPosOne[s];
 				if (triangleOrientations[s] >= 0)
 					addTriangle(q + mapQFromPosOne[s], r + mapRFromPosOne[s], s, ns, z,
-							triangleOrientations[s],  params[0], i, j, k);
+							triangleOrientations[s],  palette, i, j, k);
 			}
 			break;
 		case -1:
@@ -151,7 +153,7 @@ public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 
 				ns = mapTrianglesFromNegOne[s];
 				if (triangleOrientations[s] >= 0)
 					addTriangle(q + mapQFromNegOne[s], r + mapRFromNegOne[s], s, ns,  z,
-							triangleOrientations[s],  params[0], i, j, k);
+							triangleOrientations[s],  palette, i, j, k);
 			}
 			break;
 

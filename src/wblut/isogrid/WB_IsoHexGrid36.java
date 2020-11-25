@@ -50,9 +50,9 @@ public class WB_IsoHexGrid36  extends WB_IsoHexGrid implements WB_IsoHexGridData
 
 	}
 
-	public void addCube(int i, int j, int k, int... params) {
-		int state=params[0];
-		int palette=params[1];
+	public void addCube(int i, int j, int k, int... statePalette) {
+		int state=statePalette[0];
+		int palette=statePalette[1];
 		
 		int z = i + j + k;
 		int q = i - k;

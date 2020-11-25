@@ -13,7 +13,9 @@ void draw() {
   background(255);
   stroke(0);
   strokeWeight(1);
+  //radius
   iso.drawTriangleGrid(580);
   strokeWeight(4);
+  //radius, type (0,1,2)
   iso.drawHexGrid(580,0);
 }

@@ -9,7 +9,7 @@ void setup() {
   size(800, 800, P3D);
   smooth(8);
   //scale, I, J, K, center x, center y, colors, random seed, PApplet
-  iso=new WB_IsoSystem6(4, 64, 64, 64, width/2, height/2, new int[]{color(50), color(255), color(180)}, (int)random(1000000), this);
+  iso=new WB_IsoSystem6(4, 64, 64, 64, width/2, height/2, new int[]{color(0,0,45), color(255,255,0), color(210)}, (int)random(1000000), this);
   iso.subdivide(0.50, 16, 32, 16);
   iso.subdivide(0.30, 8, 16, 8);
   iso.subdivide(0.15, 4, 8, 4);
