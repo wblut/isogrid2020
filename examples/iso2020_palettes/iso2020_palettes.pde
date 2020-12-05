@@ -15,12 +15,27 @@ void setup() {
       }
     }
   }
+  
+  for (int i=0; i<64; i+=2) {
+    for (int j=0; j<60; j+=16) {
+      for (int k=0; k<58; k+=2) {
+        if (random(100)<15.0) iso.setPalette(i, j, k,2,16,2,  new int[]{color(255, 0,0), color(0, 255, 0), color(0, 0, 255)});
+      }
+    }
+  }
   iso.setDeferred(false);
+  iso.invertAll();
+  iso.layerIBlocks(0.5,16,2,16,16,16);
+  iso.layerJBlocks(0.5,8,2,8,8,16);
+  iso.layerKBlocks(0.5,16,4,16,32,8);
   iso.refresh();
+  
+
 }
 
 void draw() {
   background(255);
+  iso.centerGrid();
   stroke(0);
   strokeWeight(2);
   iso.drawOutlines();
