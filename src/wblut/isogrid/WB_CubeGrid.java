@@ -22,9 +22,9 @@ public class WB_CubeGrid {
 	int[] parts;
 	double[][] visibility;
 	double[][] visibilityBuffer;
-	
+
 	private WB_CubeGrid() {
-	
+
 	}
 
 	public WB_CubeGrid(int I, int J, int K) {
@@ -67,6 +67,79 @@ public class WB_CubeGrid {
 		System.arraycopy(cubes.visibility, 0, visibility, 0, IJK);
 
 	}
+
+	public WB_CubeGrid rotateICC() {
+		WB_CubeGrid result = new WB_CubeGrid(I, K, J);
+		for (int i = 0; i < I; i++) {
+		for (int j = 0; j < J; j++) {
+			for (int k = 0; k < K; k++) {
+					result.set(i,k, j, get(i, j, K-1-k));
+				}
+			}
+		}
+		return result;
+	}
+	
+	public WB_CubeGrid rotateICW() {
+		WB_CubeGrid result = new WB_CubeGrid(I,K, J);
+		for (int i = 0; i < I; i++) {
+		for (int j = 0; j < J; j++) {
+			for (int k = 0; k < K; k++) {
+					result.set(i,k, j, get(i, J-1-j, k));
+				}
+			}
+		}
+		return result;
+	}
+	
+	public WB_CubeGrid rotateJCC() {
+		WB_CubeGrid result = new WB_CubeGrid(K, J, I);
+		for (int j = 0; j < J; j++) {
+			for (int k = 0; k < K; k++) {
+				for (int i = 0; i < I; i++) {
+					result.set(k, j, i, get(i, j, K-1-k));
+				}
+			}
+		}
+		return result;
+	}
+	
+	public WB_CubeGrid rotateJCW() {
+		WB_CubeGrid result = new WB_CubeGrid(K, J, I);
+		for (int j = 0; j < J; j++) {
+			for (int k = 0; k < K; k++) {
+				for (int i = 0; i < I; i++) {
+					result.set(k, j, i, get(I-1-i, j, k));
+				}
+			}
+		}
+		return result;
+	}
+	
+	public WB_CubeGrid rotateKCC() {
+		WB_CubeGrid result = new WB_CubeGrid(J, I, K);
+		for (int k = 0; k < K; k++) {
+		for (int j = 0; j < J; j++) {
+				for (int i = 0; i < I; i++) {
+					result.set(j,i,k, get(i, J-1-j, k));
+				}
+			}
+		}
+		return result;
+	}
+	
+	public WB_CubeGrid rotateKCW() {
+		WB_CubeGrid result = new WB_CubeGrid(J,I,K);
+		for (int k = 0; k < K; k++) {
+		for (int j = 0; j < J; j++) {
+				for (int i = 0; i < I; i++) {
+					result.set(j, i, k, get(I-1-i, j, k));
+				}
+			}
+		}
+		return result;
+	}
+	
 
 	public void swap() {
 		swap = buffer;
@@ -237,8 +310,6 @@ public class WB_CubeGrid {
 	public void setVisibility() {
 		setMaxVisibilityAtBoundaries();
 		scanInteriorCubes();
-		
-		
 
 		bleedVisibility(0.5);
 
@@ -311,7 +382,7 @@ public class WB_CubeGrid {
 			}
 		}
 	}
-	
+
 	void scanInteriorCubes() {
 		int index = 0;
 		for (int i = 0; i < I; i++) {
@@ -341,7 +412,7 @@ public class WB_CubeGrid {
 				}
 			}
 		}
-		
+
 	}
 
 	void bleedVisibility(double bleedFactor) {
@@ -354,91 +425,85 @@ public class WB_CubeGrid {
 				for (int k = 0; k < K; k++) {
 					for (int side = 0; side < 6; side++) {
 						visibilityBuffer[index][side] = visibility[index][side];
-					
+
 					}
 					for (int side = 0; side < 6; side++) {
 						for (int oside = 0; oside < 6; oside++) {
-							if(side/2!=oside/2) {
+							if (side / 2 != oside / 2) {
 								visibilityBuffer[index][side] += bleedFactor * visibility[index][oside];
 							}
 						}
-					
+
 					}
-				
-					
-					
+
 					if (j > 0) {
-						visibilityBuffer[index][0] += bleedFactor * visibility[index-K][2];
+						visibilityBuffer[index][0] += bleedFactor * visibility[index - K][2];
 						visibilityBuffer[index][1] += bleedFactor * visibility[index - K][2];
-						
+
 					}
 					if (j < J - 1) {
 						visibilityBuffer[index][0] += bleedFactor * visibility[index + K][3];
 						visibilityBuffer[index][1] += bleedFactor * visibility[index + K][3];
-						
+
 					}
 					if (k > 0) {
 						visibilityBuffer[index][0] += bleedFactor * visibility[index - 1][4];
 						visibilityBuffer[index][1] += bleedFactor * visibility[index - 1][4];
-						
+
 					}
 					if (k < K - 1) {
 						visibilityBuffer[index][0] += bleedFactor * visibility[index + 1][5];
 						visibilityBuffer[index][1] += bleedFactor * visibility[index + 1][5];
-						
-					}
-					visibilityBuffer[index][0] = Math.min(visibilityBuffer[index][0],1.0);
-					visibilityBuffer[index][1] = Math.min(visibilityBuffer[index][1],1.0);
 
-					
+					}
+					visibilityBuffer[index][0] = Math.min(visibilityBuffer[index][0], 1.0);
+					visibilityBuffer[index][1] = Math.min(visibilityBuffer[index][1], 1.0);
+
 					if (i > 0) {
 						visibilityBuffer[index][2] += bleedFactor * visibility[index - JK][0];
 						visibilityBuffer[index][3] += bleedFactor * visibility[index - JK][0];
-					
+
 					}
 					if (i < I - 1) {
 						visibilityBuffer[index][2] += bleedFactor * visibility[index + JK][1];
 						visibilityBuffer[index][3] += bleedFactor * visibility[index + JK][1];
-						
+
 					}
 					if (k > 0) {
 						visibilityBuffer[index][2] += bleedFactor * visibility[index - 1][4];
 						visibilityBuffer[index][3] += bleedFactor * visibility[index - 1][4];
-						
+
 					}
 					if (k < K - 1) {
 						visibilityBuffer[index][2] += bleedFactor * visibility[index + 1][5];
 						visibilityBuffer[index][3] += bleedFactor * visibility[index + 1][5];
-						
+
 					}
-					visibilityBuffer[index][2] = Math.min(visibilityBuffer[index][2],1.0);
-					visibilityBuffer[index][3] = Math.min(visibilityBuffer[index][3],1.0);
+					visibilityBuffer[index][2] = Math.min(visibilityBuffer[index][2], 1.0);
+					visibilityBuffer[index][3] = Math.min(visibilityBuffer[index][3], 1.0);
 
-
-				
 					if (i > 0) {
 						visibilityBuffer[index][4] += bleedFactor * visibility[index - JK][0];
 						visibilityBuffer[index][5] += bleedFactor * visibility[index - JK][0];
-						
+
 					}
 					if (i < I - 1) {
 						visibilityBuffer[index][4] += bleedFactor * visibility[index + JK][1];
 						visibilityBuffer[index][5] += bleedFactor * visibility[index + JK][1];
-						
+
 					}
 					if (j > 0) {
 						visibilityBuffer[index][4] += bleedFactor * visibility[index - K][2];
 						visibilityBuffer[index][5] += bleedFactor * visibility[index - K][2];
-						
+
 					}
 					if (j < J - 1) {
 						visibilityBuffer[index][4] += bleedFactor * visibility[index + K][3];
 						visibilityBuffer[index][5] += bleedFactor * visibility[index + K][3];
-						
-					}
-					visibilityBuffer[index][4] = Math.min(visibilityBuffer[index][4],1.0);
-					visibilityBuffer[index][5] = Math.min(visibilityBuffer[index][5],1.0);
 
+					}
+					visibilityBuffer[index][4] = Math.min(visibilityBuffer[index][4], 1.0);
+					visibilityBuffer[index][5] = Math.min(visibilityBuffer[index][5], 1.0);
 
 					index++;
 				}
@@ -529,7 +594,7 @@ public class WB_CubeGrid {
 						visibilityBuffer[index][side] = visibility[index][side];
 					}
 					w = 1.0;
-					if (j > 0 ) {
+					if (j > 0) {
 						visibilityBuffer[index][0] += smoothFactor * visibility[index - K][0];
 						visibilityBuffer[index][1] += smoothFactor * visibility[index - K][1];
 						w += smoothFactor;

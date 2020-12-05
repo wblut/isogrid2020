@@ -200,6 +200,9 @@ public abstract class WB_IsoHexGrid {
 	abstract void line(
 			PApplet pg, double q1, double r1,double q2, double r2, double ox, double oy, double sx, double sy) ;
 	
+	abstract void clippedLine(
+			PApplet pg, double q1, double r1,double q2, double r2, double ox, double oy, double sx, double sy, double xmin, double ymin, double xmax, double ymax) ;
+	
 	abstract void point(PApplet pg, double q, double r, double ox, double oy, double sx, double sy);
 
 	abstract double[] getGridCoordinates(double q, double r, double ox, double oy, double sx, double sy) ;

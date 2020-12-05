@@ -9,19 +9,21 @@ public class WB_IsoSystem6 extends WB_IsoSystem {
 	public WB_IsoSystem6(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
 			boolean full, PApplet home) {
 		super(L, I, J, K, centerX, centerY, colors, seed, full, home);
-		if (colors.length % 3 != 0) {
-			throw new IllegalArgumentException("Palette length should be a mutiple of 3 or 10.");
-		}
-		numPalettes = colors.length / 3;
+	}
+	
+	public WB_IsoSystem6(double L, int I, int J, int K, double centerX, double centerY, List<WB_IsoPalette> palettes, int seed,
+			boolean full, PApplet home) {
+		super(L, I, J, K, centerX, centerY, palettes, seed, full, home);
 	}
 
 	public WB_IsoSystem6(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
 			PApplet home) {
 		super(L, I, J, K, centerX, centerY, colors, seed, true, home);
-		if (colors.length % 3 != 0) {
-			throw new IllegalArgumentException("Palette length should be a mutiple of 3 or 10.");
-		}
-		numPalettes = colors.length / 3;
+	}
+	
+	public WB_IsoSystem6(double L, int I, int J, int K, double centerX, double centerY, List<WB_IsoPalette> palettes, int seed,
+			PApplet home) {
+		super(L, I, J, K, centerX, centerY, palettes, seed, true, home);
 	}
 
 	public WB_IsoSystem6(WB_IsoSystem6 iso) {
@@ -34,8 +36,13 @@ public class WB_IsoSystem6 extends WB_IsoSystem {
 
 	public WB_IsoSystem6(boolean[][][] pattern, int scaleI, int scaleJ, int scaleK, double L, double centerX,
 			double centerY, int[] colors, int seed, PApplet home) {
-
 		super(pattern, scaleI, scaleJ, scaleK, L, centerX, centerY, colors, seed, home);
+
+	}
+	
+	public WB_IsoSystem6(boolean[][][] pattern, int scaleI, int scaleJ, int scaleK, double L, double centerX,
+			double centerY, List<WB_IsoPalette> palettes, int seed, PApplet home) {
+		super(pattern, scaleI, scaleJ, scaleK, L, centerX, centerY, palettes, seed, home);
 
 	}
 
@@ -71,19 +78,77 @@ public class WB_IsoSystem6 extends WB_IsoSystem {
 
 	}
 	
-	public static void main(String... args) {
-		 boolean[][][] pattern=WB_PixelFont.getText3xN("test 4", 5, 2, 1, false, false, true);
 
-		  //pattern, I upsampling, J upsampling, K upsampling, cell size, center x, center y, colors, random seed, PApplet
-		  WB_IsoSystem6 iso=new WB_IsoSystem6(3.6, 21, 5, 8, 0,0, new int[]{0,0,0},0, false, new PApplet());
-
-		  iso.setPattern(pattern, 0, 0, 0, 1, 1, 1, false, false, false);
-		  iso=new WB_IsoSystem6(iso,4,4,4);
-		  iso.refresh();
-		
 	
+	
+
+	public WB_IsoSystem6 rotateICC() {
+		WB_IsoSystem6 result=new WB_IsoSystem6(L,I,K,J,centerX,centerY,palettes,seed,false,home);
+		result.cubes=cubes.rotateICC();
+		result.map();
+		
+	return result;
 	}
 	
+
+	public WB_IsoSystem6 rotateICW() {
+		WB_IsoSystem6 result=new WB_IsoSystem6(L,I,K,J,centerX,centerY,palettes,seed,false,home);
+		result.cubes=cubes.rotateICW();
+		result.map();
+		
+	return result;
+	}
+
 	
+	public WB_IsoSystem6 rotateJCW() {
+		if(YFLIP) {
+			return rotateJCCImpl();
+		}else {
+			
+			return rotateJCWImpl();
+		}
+	}
+	public WB_IsoSystem6 rotateJCC() {
+		if(YFLIP) {
+			return rotateJCWImpl();
+		}else {
+			return rotateJCCImpl();
+		}
+	}
+
+
+	WB_IsoSystem6 rotateJCCImpl() {
+		WB_IsoSystem6 result=new WB_IsoSystem6(L,K,J,I,centerX,centerY,palettes,seed,false,home);
+		result.cubes=cubes.rotateJCC();
+		result.map();
+		
+	return result;
+	}
+	
+
+	WB_IsoSystem6 rotateJCWImpl() {
+		WB_IsoSystem6 result=new WB_IsoSystem6(L,K,J,I,centerX,centerY,palettes,seed,false,home);
+		result.cubes=cubes.rotateJCW();
+		result.map();
+		
+	return result;
+	}
+	
+	public WB_IsoSystem6 rotateKCC() {
+		WB_IsoSystem6 result=new WB_IsoSystem6(L,J,I,K,centerX,centerY,palettes,seed,false,home);
+		result.cubes=cubes.rotateKCC();
+		result.map();
+		
+	return result;
+	}
+	
+
+	public WB_IsoSystem6 rotateKCW() {
+		WB_IsoSystem6 result=new WB_IsoSystem6(L,J,I,K,centerX,centerY,palettes,seed,false,home);
+		result.cubes=cubes.rotateKCW();
+		result.map();
+		
+	return result;
+	}
 
 }

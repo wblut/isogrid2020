@@ -118,7 +118,7 @@ public class WB_PixelFont {
 		return grid;
 	}
 
-	public static boolean[][][] getText3x3(String text, int thickness, int spacing, boolean flipX, boolean flipY) {
+	public static boolean[][][] getText3x3(String text, int thickness, int spacing, int padding, boolean flipX, boolean flipY) {
 		String lctext = text.toLowerCase();
 		if(flipX) lctext=new StringBuilder(lctext).reverse().toString();
 		int count = 0;
@@ -126,10 +126,11 @@ public class WB_PixelFont {
 			if (Character.isWhitespace(lctext.charAt(i)))
 				count++;
 		}
-		int gridsize = 4*lctext.length() + count * (spacing - 4);
+		
+		int gridsize = 4*lctext.length() + count * (spacing - 4)- (count==0?1:0) + 2*padding;
 		boolean[][][] charGrid;
 		boolean[][][] grid = new boolean[gridsize][3][thickness];
-		int gridIndex = 0;
+		int gridIndex = padding;
 		for (int i = 0; i < lctext.length(); i++) {
 			if (Character.isWhitespace(lctext.charAt(i))) {
 				gridIndex += spacing+1;
@@ -366,7 +367,7 @@ public class WB_PixelFont {
 
 
 
-	public static boolean[][][] getText3xN(String text, int N, int thickness, int spacing, boolean alt, boolean flipX, boolean flipY) {
+	public static boolean[][][] getText3xN(String text, int N, int thickness, int spacing, int padding,boolean alt, boolean flipX, boolean flipY) {
 		String lctext = text.toLowerCase();
 		if(flipX) lctext=new StringBuilder(lctext).reverse().toString();
 		int count = 0;
@@ -374,10 +375,10 @@ public class WB_PixelFont {
 			if (Character.isWhitespace(lctext.charAt(i)))
 				count++;
 		}
-		int gridsize = 4*lctext.length() + count * (spacing - 4);
+		int gridsize = 4*lctext.length() + count * (spacing - 4) - (count==0?1:0)+2*padding;
 		boolean[][][] charGrid;
 		boolean[][][] grid = new boolean[gridsize][N][thickness];
-		int gridIndex = 0;
+		int gridIndex = padding;
 		for (int i = 0; i < lctext.length(); i++) {
 			if (Character.isWhitespace(lctext.charAt(i))) {
 				gridIndex += spacing+1;
@@ -397,6 +398,7 @@ public class WB_PixelFont {
 
 		return grid;
 	}
+
 
 	
 }

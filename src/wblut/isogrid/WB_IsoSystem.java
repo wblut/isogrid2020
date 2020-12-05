@@ -21,8 +21,7 @@ public abstract class WB_IsoSystem {
 	double centerX, centerY;
 	PApplet home;
 	int seed;
-	int[] colors;
-	int numPalettes;
+	List<WB_IsoPalette> palettes;
 	int numParts;
 	int numRegions;
 	RestorableUniformRandomProvider randomGen;
@@ -48,7 +47,37 @@ public abstract class WB_IsoSystem {
 		this.K = Math.max(1, K);
 		JK = this.J * this.K;
 		IJK = this.I * JK;
-		this.colors = colors;
+		setColors(colors);
+		this.centerX = centerX;
+		this.centerY = centerY;
+		this.cubes = new WB_CubeGrid(this.I, this.J, this.K);
+		this.seed = seed;
+		setGrid();
+		PARTS = true;
+		VISIBILITY = true;
+		if (full) {
+			set(0, 0, 0, I, J, K);
+			map();
+		}
+		DEFER = false;
+		GLOBALDEFER = false;
+		YFLIP = true;
+
+	}
+	
+
+	WB_IsoSystem(double L, int I, int J, int K, double centerX, double centerY, List<WB_IsoPalette> palettes, int seed, boolean full,
+			PApplet home) {
+		randomGen = RandomSource.create(RandomSource.MT);
+		state = randomGen.saveState();
+		this.home = home;
+		this.L = L;
+		this.I = Math.max(1, I);
+		this.J = Math.max(1, J);
+		this.K = Math.max(1, K);
+		JK = this.J * this.K;
+		IJK = this.I * JK;
+		this.palettes=palettes;
 		this.centerX = centerX;
 		this.centerY = centerY;
 		this.cubes = new WB_CubeGrid(this.I, this.J, this.K);
@@ -70,6 +99,11 @@ public abstract class WB_IsoSystem {
 		this(L, I, J, K, centerX, centerY, colors, seed, true, home);
 
 	}
+	
+	WB_IsoSystem(double L, int I, int J, int K, double centerX, double centerY, List<WB_IsoPalette> palettes, int seed, PApplet home) {
+		this(L, I, J, K, centerX, centerY, palettes, seed, true, home);
+
+	}
 
 	WB_IsoSystem(WB_IsoSystem iso) {
 		randomGen = RandomSource.create(RandomSource.MT);
@@ -81,9 +115,10 @@ public abstract class WB_IsoSystem {
 		this.K = iso.K;
 		JK = this.J * this.K;
 		IJK = this.I * JK;
-		this.colors = new int[iso.colors.length];
-		System.arraycopy(iso.colors, 0, this.colors, 0, iso.colors.length);
-		this.numPalettes = iso.numPalettes;
+		this.palettes = new ArrayList<WB_IsoPalette>(iso.palettes.size());
+		for(WB_IsoPalette palette: iso.palettes) {
+			this.palettes.add(palette);
+		}
 		this.centerX = iso.centerX;
 		this.centerY = iso.centerY;
 		this.cubes = new WB_CubeGrid(iso.cubes);
@@ -123,20 +158,22 @@ public abstract class WB_IsoSystem {
 		} else {
 			K = iso.K / Math.abs(scaleK);
 		}
-		
+
 		JK = this.J * this.K;
 		IJK = this.I * JK;
-		this.colors = new int[iso.colors.length];
-		System.arraycopy(iso.colors, 0, this.colors, 0, iso.colors.length);
-		this.numPalettes = iso.numPalettes;
+		this.palettes = new ArrayList<WB_IsoPalette>(iso.palettes.size());
+		for(WB_IsoPalette palette: iso.palettes) {
+			this.palettes.add(palette);
+		}
 		this.centerX = iso.centerX;
 		this.centerY = iso.centerY;
 		this.cubes = new WB_CubeGrid(I, J, K);
-		
+
 		this.seed = iso.seed;
 		setGrid();
 
 		int index = 0;
+		int lookup=0;
 		int lookupI = -1, lookupJ = -1, lookupK = -1;
 		for (int i = 0; i < I; i++) {
 			for (int j = 0; j < J; j++) {
@@ -150,10 +187,12 @@ public abstract class WB_IsoSystem {
 					if (scaleK > 0) {
 						lookupK = k / scaleK;
 					}
-					if (getSampledValue(iso, lookupI, lookupJ, lookupK, i, j, k, Math.abs(scaleI), Math.abs(scaleJ),
-							Math.abs(scaleK))) {
-					
+					lookup=getSampledValue(iso, lookupI, lookupJ, lookupK, i, j, k, Math.abs(scaleI), Math.abs(scaleJ),
+							Math.abs(scaleK));
+					if (iso.cubes.get(lookup)) {
+
 						cubes.set(index, true);
+						cubes.setPalette(index, iso.cubes.getPalette(lookup));
 					}
 					index++;
 				}
@@ -169,10 +208,10 @@ public abstract class WB_IsoSystem {
 
 	}
 
-	private boolean getSampledValue(WB_IsoSystem source, int lookupI, int lookupJ, int lookupK, int i, int j, int k,
+	private int getSampledValue(WB_IsoSystem source, int lookupI, int lookupJ, int lookupK, int i, int j, int k,
 			int scaleI, int scaleJ, int scaleK) {
 		if (lookupI >= 0 && lookupJ >= 0 && lookupK >= 0) {
-			return source.cubes.get(lookupI, lookupJ, lookupK);
+			return source.index(lookupI, lookupJ, lookupK);
 		}
 		int si, ei;
 		if (lookupI >= 0) {
@@ -200,13 +239,54 @@ public abstract class WB_IsoSystem {
 			for (int tj = sj; tj <= ej; tj++) {
 				for (int tk = sk; tk <= ek; tk++) {
 					if (source.cubes.get(ti, tj, tk))
-						return true;
+						return source.index(ti, tj, tk);
 				}
 			}
 		}
-		return false;
+		return 0;
 	}
 
+	WB_IsoSystem(boolean[][][] pattern, int scaleI, int scaleJ, int scaleK, double L, double centerX, double centerY,
+			 List<WB_IsoPalette> palettes, int seed, PApplet home) {
+		randomGen = RandomSource.create(RandomSource.MT);
+		state = randomGen.saveState();
+		this.home = home;
+		this.L = L;
+		I = scaleI * pattern.length;
+		if (I < 0)
+			throw new IllegalArgumentException("Pattern should be at least 1x1x1 and scale can't be zero or negative.");
+		J = scaleJ * pattern[0].length;
+		if (J < 0)
+			throw new IllegalArgumentException(
+					"Pattern should be at least 1x1x1 and scale can't be zero or negative..");
+		K = scaleK * pattern[0][0].length;
+		if (K < 0)
+			throw new IllegalArgumentException(
+					"Pattern should be at least 1x1x1 and scale can't be zero or negative..");
+		JK = this.J * this.K;
+		IJK = this.I * JK;
+		this.palettes=palettes;
+		this.centerX = centerX;
+		this.centerY = centerY;
+		this.cubes = new WB_CubeGrid(this.I, this.J, this.K);
+		this.seed = seed;
+		setGrid();
+		PARTS = true;
+		VISIBILITY = true;
+		for (int i = 0, pi = 0; i < I; i += scaleI, pi++) {
+			for (int j = 0, pj = 0; j < J; j += scaleJ, pj++) {
+				for (int k = 0, pk = 0; k < K; k += scaleK, pk++) {
+					if (pattern[pi][pj][pk])
+						set(i, j, k, scaleI, scaleJ, scaleK);
+				}
+			}
+		}
+		map();
+		DEFER = false;
+		GLOBALDEFER = false;
+		YFLIP = true;
+	}
+	
 	WB_IsoSystem(boolean[][][] pattern, int scaleI, int scaleJ, int scaleK, double L, double centerX, double centerY,
 			int[] colors, int seed, PApplet home) {
 		randomGen = RandomSource.create(RandomSource.MT);
@@ -226,7 +306,7 @@ public abstract class WB_IsoSystem {
 					"Pattern should be at least 1x1x1 and scale can't be zero or negative..");
 		JK = this.J * this.K;
 		IJK = this.I * JK;
-		this.colors = colors;
+		setColors(colors);
 		this.centerX = centerX;
 		this.centerY = centerY;
 		this.cubes = new WB_CubeGrid(this.I, this.J, this.K);
@@ -243,12 +323,49 @@ public abstract class WB_IsoSystem {
 			}
 		}
 		map();
-
 		DEFER = false;
 		GLOBALDEFER = false;
 		YFLIP = true;
-
 	}
+	
+	
+	private void setColors(int[] colors) {
+		if(colors.length==0 || colors.length%3!=0) throw new IllegalArgumentException("Number of colors should be at least 3 or a higher multiple of 3.");
+		palettes = new ArrayList<WB_IsoPalette>();
+	int n=colors.length/3;
+	for(int i=0;i<n;i++) {
+		palettes.add(new WB_IsoPalette(colors[i*3],colors[i*3+1],colors[i*3+2]));
+	}
+		
+		
+
+	
+	
+	}
+
+	public int getI() {
+		return I;
+	}
+
+	public int getJ() {
+		return J;
+	}
+
+	public int getK() {
+		return K;
+	}
+
+	public abstract WB_IsoSystem rotateJCW();
+
+	public abstract WB_IsoSystem rotateJCC();
+
+	public abstract WB_IsoSystem rotateICW();
+
+	public abstract WB_IsoSystem rotateICC();
+
+	public abstract WB_IsoSystem rotateKCW();
+
+	public abstract WB_IsoSystem rotateKCC();
 
 	abstract void setGrid();
 
@@ -268,7 +385,18 @@ public abstract class WB_IsoSystem {
 	}
 
 	public int getNumberOfPalettes() {
-		return numPalettes;
+		return palettes.size();
+	}
+	
+	public int createPalette(int[] colors) {
+		WB_IsoPalette palette=new WB_IsoPalette(colors);
+		int pal=palettes.indexOf(palette);
+		if(pal==-1) {
+			palettes.add(palette);
+			pal=palettes.size()-1;
+		}
+		
+		return pal;
 	}
 
 	final public void setRNGSeed(long seed) {
@@ -997,6 +1125,31 @@ public abstract class WB_IsoSystem {
 		}
 	}
 
+	public void edgePart(int part) {
+		DEFER = true;
+		int index = 0;
+		for (int i = 0; i < I; i++) {
+			for (int j = 0; j < J; j++) {
+				for (int k = 0; k < K; k++) {
+					if (cubes.parts[index] == part) {
+						if (cubes.isEdge(i, j, k)) {
+							cubes.setBuffer(index, true);
+						} else {
+
+							cubes.setBuffer(index, false);
+						}
+					} else {
+						cubes.setBuffer(index, cubes.get(index));
+					}
+					index++;
+				}
+			}
+		}
+		cubes.swap();
+		DEFER = false;
+		map();
+	}
+
 	public void openIAll() {
 		for (int j = 0; j < J; j++) {
 			for (int k = 0; k < K; k++) {
@@ -1253,6 +1406,41 @@ public abstract class WB_IsoSystem {
 		}
 		map();
 	}
+	
+	public void setPalette(int i, int j, int k, int blocki, int blockj, int blockk,int[] colors) {
+		WB_IsoPalette palette=new WB_IsoPalette(colors);
+		int pal=palettes.indexOf(palette);
+		if(pal==-1) {
+			palettes.add(palette);
+			pal=palettes.size()-1;
+		}
+
+		for (int di = 0; di < blocki; di++) {
+			for (int dj = 0; dj < blockj; dj++) {
+				for (int dk = 0; dk < blockk; dk++) {
+					int index = index(i + di, j + dj, k + dk);
+					if (index > -1) {
+						cubes.setPalette(index, pal);
+					}
+				}
+			}
+		}
+		map();
+	}
+	
+	public void setPalette(int i, int j, int k, int blocki, int blockj, int blockk,int palette) {
+		for (int di = 0; di < blocki; di++) {
+			for (int dj = 0; dj < blockj; dj++) {
+				for (int dk = 0; dk < blockk; dk++) {
+					int index = index(i + di, j + dj, k + dk);
+					if (index > -1) {
+						cubes.setPalette(index, palette);
+					}
+				}
+			}
+		}
+		map();
+	}
 
 	public void set(int i, int j, int k) {
 		cubes.set(i, j, k, true);
@@ -1281,6 +1469,23 @@ public abstract class WB_IsoSystem {
 
 	public void not(int i, int j, int k) {
 		cubes.not(i, j, k);
+		map();
+	}
+	
+	public void setPalette(int i, int j, int k,int[] colors) {
+		WB_IsoPalette palette=new WB_IsoPalette(colors);
+		int pal=palettes.indexOf(palette);
+		if(pal==-1) {
+			palettes.add(palette);
+			pal=palettes.size()-1;
+		}
+		cubes.setPalette(i, j, k, pal);
+		map();
+	}
+	
+	public void setPalette(int i, int j, int k,int palette) {
+
+		cubes.setPalette(i, j, k, palette);
 		map();
 	}
 
@@ -1443,6 +1648,16 @@ public abstract class WB_IsoSystem {
 			}
 		}
 	}
+	
+
+	final public void drawLinesSVG(double xmin, double ymin, double xmax, double ymax) {
+		for (WB_IsoGridLine line : grid.lines) {
+			for (WB_IsoGridSegment segment : line.getSegments()) {
+				grid.clippedLine(home, segment.getQ1(), segment.getR1(), segment.getQ2(), segment.getR2(), centerX, centerY, L,
+						(YFLIP ? -1.0 : 1.0) * L,xmin,ymin,xmax,ymax);
+			}
+		}
+	}
 
 	final public void drawLines() {
 		drawLines(home.g);
@@ -1474,6 +1689,16 @@ public abstract class WB_IsoSystem {
 		drawOutlines(home.g);
 	}
 
+	final public void drawOutlinesSVG(double xmin, double ymin, double xmax, double ymax)  {
+		for (WB_IsoGridLine line : grid.outlines) {
+			for (WB_IsoGridSegment segment : line.getSegments()) {
+				grid.clippedLine(home, segment.getQ1(), segment.getR1(), segment.getQ2(), segment.getR2(), centerX, centerY, L,
+						(YFLIP ? -1.0 : 1.0) * L,xmin,ymin,xmax,ymax);
+
+			}
+		}
+	}
+	
 	final public void drawOutlinesSVG() {
 		for (WB_IsoGridLine line : grid.outlines) {
 			for (WB_IsoGridSegment segment : line.getSegments()) {
@@ -1518,7 +1743,7 @@ public abstract class WB_IsoSystem {
 			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
 				if (cell.orientation[f] > -1) {
 					home.beginShape(PConstants.TRIANGLES);
-					home.fill(colors[cell.palette[f] * ((getNumberOfTriangles() == 6) ? 3 : 10) + cell.orientation[f]]);
+					home.fill(palettes.get(cell.palette[f]).getColor(cell.orientation[f]));
 					triVertices(center, f);
 					home.endShape();
 				}
@@ -1692,6 +1917,12 @@ public abstract class WB_IsoSystem {
 			}
 		}
 	}
+	
+	final public double[] getCenter() {
+		return grid.getGridCoordinates(I / 2.0 - K / 2.0, J / 2.0 - K / 2.0, centerX, centerY, L,
+				(YFLIP ? -1.0 : 1.0) * L);
+		
+	}
 
 	final public void centerGrid() {
 		double[] center = grid.getGridCoordinates(I / 2.0 - K / 2.0, J / 2.0 - K / 2.0, centerX, centerY, L,
@@ -1725,63 +1956,34 @@ public abstract class WB_IsoSystem {
 		return v + randomGen.nextDouble() * (w - v);
 	}
 
-	int[] createDualPalette(int[] palette) {
-		if (palette.length % 3 != 0)
-			throw new IllegalArgumentException("Palette length should be a mutiple of 3.");
-		home.pushStyle();
-		home.colorMode(PConstants.RGB);
-		int numberOfPalettes = palette.length / 3;
-		int[] colors = new int[10 * numberOfPalettes];
-		float hsqrt2 = (float) Math.sqrt(2.0) * 0.5f;
-		float hsqrt3 = (float) Math.sqrt(3.0) * 0.5f;
 
-		float[][] normals = new float[10][3];
+	
+	public static void main(String... args) {
+		
+		 WB_IsoSystem6 iso=new WB_IsoSystem6(4, 64, 60, 58, 500, 500, new int[]{0xff000000|255,0xff000000|0,0xff000000|128}, (int)(Math.random()*1000000), new PApplet());
 
-		normals[0] = new float[] { 1, 0, 0 };
-		normals[1] = new float[] { 0, 1, 0 };
-		normals[2] = new float[] { 0, 0, 1 };
-		normals[3] = new float[] { hsqrt2, hsqrt2, 0 };
-		normals[4] = new float[] { hsqrt2, 0, hsqrt2 };
-		normals[5] = new float[] { 0, hsqrt2, hsqrt2 };
-		normals[6] = new float[] { hsqrt3, hsqrt3, hsqrt3 };
-		normals[7] = new float[] { -hsqrt3, hsqrt3, hsqrt3 };
-		normals[8] = new float[] { hsqrt3, -hsqrt3, hsqrt3 };
-		normals[9] = new float[] { hsqrt3, hsqrt3, -hsqrt3 };
 
-		for (int p = 0; p < numberOfPalettes; p++) {
+	  iso.invertAll();
+	  
+	  //step j, step k, size j, size k
+	  iso.barIAll(8,16,2,2);
+	  //step i, step k, size i, size k
+	  iso.barJAll(16,16,4,1);
+	  //step i, step j, size i, size j
+	  iso.barKAll(32,8,2,8);
+	 
+	  int pal=iso.createPalette(new int[]{0xff000000|255,0xff000000|60,0xff000000|128});
+	  /*
+	  for(int i=0;i<64;i++){
+	     for(int j=0;j<60;j++){
+	        for(int k=0;k<58;k++){
+	          if(random(100)<1.0) iso.setPalette(i,j,k,pal);
+	        }
+	     }
+	  }*/
 
-			float[][] light = new float[][] {
-
-					{ 1, 0, 0, (palette[3 * p] >> 16) & 0xff, (palette[3 * p] >> 8) & 0xff, palette[3 * p] & 0xff },
-					{ 0, 1, 0, (palette[3 * p + 1] >> 16) & 0xff, (palette[3 * p + 1] >> 8) & 0xff,
-							palette[3 * p + 1] & 0xff },
-					{ 0, 0, 1, (palette[3 * p + 2] >> 16) & 0xff, (palette[3 * p + 2] >> 8) & 0xff,
-							palette[3 * p + 2] & 0xff } };
-
-			for (int i = 0; i < 10; i++) {
-				float red, green, blue, dot;
-				red = green = blue = 0;
-				for (int l = 0; l < 3; l++) {
-					dot = (float) Math.max(0,
-							normals[i][0] * light[l][0] + normals[i][1] * light[l][1] + normals[i][2] * light[l][2]);
-					red += dot * light[l][3];
-					green += dot * light[l][4];
-					blue += dot * light[l][5];
-				}
-
-				float max = (float) Math.max(red, Math.max(green, blue));
-				if (max > 400.0f) {
-					red *= 400.0f / max;
-					green *= 400.0f / max;
-					blue *= 400.0f / max;
-				}
-				colors[10 * p + i] = home.color((float) Math.max(Math.min(red, 255), 0),
-						(float) Math.max(Math.min(green, 255), 0), (float) Math.max(Math.min(blue, 255), 0));
-			}
-
-		}
-		home.popStyle();
-		return colors;
+	  iso.setPalette(63,59,57,pal);
+}
 	}
 
-}
+

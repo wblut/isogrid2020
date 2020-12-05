@@ -13,30 +13,24 @@ public class WB_IsoSystem36 extends WB_IsoSystem {
 	public WB_IsoSystem36(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
 			boolean full, PApplet home) {
 		super(L, I, J, K, centerX, centerY, colors, seed, full, home);
-		if(colors.length%10==0) {
-			//10-color palette
-		}else if(colors.length%3==0) {
-		 this.colors=createDualPalette(colors);
-		}
-		else {
-			throw new IllegalArgumentException("Palette length should be a mutiple of 3 or 10.");
-		}
-		numPalettes=colors.length/10;
+		DUAL = false;
+	}
+	
+	public WB_IsoSystem36(double L, int I, int J, int K, double centerX, double centerY, List<WB_IsoPalette> palettes, int seed,
+			boolean full, PApplet home) {
+		super(L, I, J, K, centerX, centerY, palettes, seed, full, home);
 		DUAL = false;
 	}
 
 	public WB_IsoSystem36(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
 			PApplet home) {
 		super(L, I, J, K, centerX, centerY, colors, seed, true, home);
-		if(colors.length%10==0) {
-			//10-color palette
-		}else if(colors.length%3==0) {
-		 this.colors=createDualPalette(colors);
-		}
-		else {
-			throw new IllegalArgumentException("Palette length should be a mutiple of 3 or 10.");
-		}
-		numPalettes=colors.length/10;
+		DUAL = false;
+	}
+	
+	public WB_IsoSystem36(double L, int I, int J, int K, double centerX, double centerY, List<WB_IsoPalette> palettes, int seed,
+			PApplet home) {
+		super(L, I, J, K, centerX, centerY, palettes, seed, true, home);
 		DUAL = false;
 	}
 
@@ -55,8 +49,7 @@ public class WB_IsoSystem36 extends WB_IsoSystem {
 		this.J = iso.J + 3;
 		this.K = iso.K + 3;
 		IJK = I * J * K;
-		colors = createDualPalette(iso.colors);
-		numPalettes=colors.length/10;
+		palettes = iso.palettes;
 		this.centerX = iso.centerX;
 		this.centerY = iso.centerY;
 		this.cubes = new WB_CubeGrid(I, J, K);
@@ -125,6 +118,74 @@ public class WB_IsoSystem36 extends WB_IsoSystem {
 	
 	public WB_IsoSystem36(WB_IsoSystem iso, int scaleI, int scaleJ, int scaleK) {
 		super(iso, scaleI, scaleJ, scaleK);
+	}
+	
+	public WB_IsoSystem36 rotateICC() {
+		WB_IsoSystem36 result=new WB_IsoSystem36(L,I,K,J,centerX,centerY,palettes,seed,false,home);
+		result.cubes=cubes.rotateICC();
+		result.map();
+		
+	return result;
+	}
+	
+
+	public WB_IsoSystem36 rotateICW() {
+		WB_IsoSystem36 result=new WB_IsoSystem36(L,I,K,J,centerX,centerY,palettes,seed,false,home);
+		result.cubes=cubes.rotateICW();
+		result.map();
+		
+	return result;
+	}
+	
+	public WB_IsoSystem36 rotateJCW() {
+		if(YFLIP) {
+			return rotateJCCImpl();
+		}else {
+			
+			return rotateJCWImpl();
+		}
+	}
+	public WB_IsoSystem36 rotateJCC() {
+		if(YFLIP) {
+			return rotateJCWImpl();
+		}else {
+			return rotateJCCImpl();
+		}
+	}
+
+
+	WB_IsoSystem36 rotateJCCImpl() {
+		WB_IsoSystem36 result=new WB_IsoSystem36(L,K,J,I,centerX,centerY,palettes,seed,false,home);
+		result.cubes=cubes.rotateJCC();
+		result.map();
+		
+	return result;
+	}
+	
+
+	WB_IsoSystem36 rotateJCWImpl() {
+		WB_IsoSystem36 result=new WB_IsoSystem36(L,K,J,I,centerX,centerY,palettes,seed,false,home);
+		result.cubes=cubes.rotateJCW();
+		result.map();
+		
+	return result;
+	}
+	
+	public WB_IsoSystem36 rotateKCC() {
+		WB_IsoSystem36 result=new WB_IsoSystem36(L,J,I,K,centerX,centerY,palettes,seed,false,home);
+		result.cubes=cubes.rotateKCC();
+		result.map();
+		
+	return result;
+	}
+	
+
+	public WB_IsoSystem36 rotateKCW() {
+		WB_IsoSystem36 result=new WB_IsoSystem36(L,J,I,K,centerX,centerY,palettes,seed,false,home);
+		result.cubes=cubes.rotateKCW();
+		result.map();
+		
+	return result;
 	}
 
 	void setGrid() {
