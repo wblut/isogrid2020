@@ -7,8 +7,19 @@ public class WB_IsoGridSegment {
 	private int lineValue;
 	private int sortValue;
 	private int q1, r1, q2, r2;
+	
+	protected WB_IsoGridSegment(WB_IsoGridSegment seg) {
+		this.q1 = seg.q1;
+		this.r1 = seg.r1;
+		this.q2 = seg.q2;
+		this.r2 = seg.r2;
+		this.type=seg.type;
+		this.lineValue=seg.lineValue;
+		this.sortValue=seg.sortValue;
+	
+	}
 
-	protected WB_IsoGridSegment(int q1, int r1, int q2, int r2) {
+	public WB_IsoGridSegment(int q1, int r1, int q2, int r2) {
 		this.q1 = q1;
 		this.r1 = r1;
 		this.q2 = q2;
@@ -125,7 +136,7 @@ public class WB_IsoGridSegment {
 		setR1(tmp);
 	}
 
-	protected long getHash() {
+	public long getHash() {
 		long A = (type >= 0 ? 2 * (long) type : -2 * (long) type - 1);
 		long B = (lineValue >= 0 ? 2 * (long) lineValue : -2 * (long) lineValue - 1);
 		long C = ((A >= B ? A * A + A + B : A + B * B) / 2);

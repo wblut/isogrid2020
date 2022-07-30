@@ -19,7 +19,7 @@ public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 
 	}
 
 
-	public void addTriangle(int q, int r, int f, int s, int z, int orientation, int palette, int i,
+	void addTriangle(int q, int r, int f, int s, int z, int orientation, int colorSourceIndex, int i,
 			int j, int k) {
 		long key = getCellHash(q, r);
 		WB_IsoGridCell cell = cells.get(key);
@@ -37,17 +37,20 @@ public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 
 			
 			cell.orientation[s] = orientation;
 			cell.z[s] = z;
-			cell.triangle[s] = f;
-			cell.palette[s] = palette;
+			cell.triangleIndex[s] = f;
+			cell.triangleColorSourceIndex[s] = colorSourceIndex;
 			cell.setI(s,i);
 			cell.setJ(s,j);
 			cell.setK(s,k);
 			cell.triangleUV[s] = cycle(cycle, triangleUVs[f]);
 			cell.triangleUVDirections[s][0] = triangleUVDirections[f][0];
 			cell.triangleUVDirections[s][1] = triangleUVDirections[f][1];
-			cell.triangleUVOffsets[s][0] = cell.getIndices(s)[triangleUVDirections[f][0]]*triangleUVDirectionSigns[f][0]-(triangleUVDirectionSigns[f][0]<0?1:0);
-			cell.triangleUVOffsets[s][1] = cell.getIndices(s)[triangleUVDirections[f][1]]*triangleUVDirectionSigns[f][1]-(triangleUVDirectionSigns[f][1]<0?1:0);
+			cell.triangleUVDirectionSigns[s][0] = triangleUVDirectionSigns[f][0];
+			cell.triangleUVDirectionSigns[s][1] = triangleUVDirectionSigns[f][1];
+			cell.triangleUVOffsets[s][0] = cell.getIndices(s)[cell.triangleUVDirections[s][0]]*cell.triangleUVDirectionSigns[s][0]-(cell.triangleUVDirectionSigns[s][0]<0?1:0);
+			cell.triangleUVOffsets[s][1] = cell.getIndices(s)[cell.triangleUVDirections[s][1]]*cell.triangleUVDirectionSigns[s][1]-(cell.triangleUVDirectionSigns[s][1]<0?1:0);
 			cell.part[s] = -1;
+			cell.occupied[s]=true;
 		}
 		
 
@@ -80,10 +83,9 @@ public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 
 		case 0:
 			long key = getCellHash(q, r);
 			WB_IsoGridCell cell = cells.get(key);
-	       if(cell==null) return false;
-			for (int s = 0; s < 6; s++) {
-				if(cell.getOrientation(s)==-1) return false;
-			}
+	       if(cell==null||!cell.isFull()) return false;
+			
+	
 			return true;
 			
 		case +1:
@@ -93,7 +95,7 @@ public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 
 				cell = cells.get(key);
 				if(cell==null) return false;
 				ns = mapTrianglesFromPosOne[s];
-				if(cell.getOrientation(ns)==-1) return false;
+				if(!cell.isOccupied(ns)) return false;
 			}
 		    return true;
 
@@ -103,7 +105,7 @@ public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 
 				cell = cells.get(key);
 				if(cell==null) return false;
 				ns = mapTrianglesFromNegOne[s];
-				if(cell.getOrientation(ns)==-1) return false;
+				if(!cell.isOccupied(ns)) return false;
 			}
 			return true;
 
@@ -122,6 +124,7 @@ int palette=params[0];
 		int q = i - k;
 		int r = j - k;
 		int layer = q+r;
+		layer=layer-3*((layer+1)/3);
 		while (layer > 1) {
 			layer -= 3;
 		}
@@ -197,6 +200,23 @@ int palette=params[0];
 				line.reverse();
 			i++;
 		}
+		
+		gridlinesMap.clear();
+		collectInterHexSegmentsGrid(gridlinesMap);
+		collectInterTriangleSegmentsGrid(gridlinesMap);
+
+		gridlines = new ArrayList<WB_IsoGridLine>();
+		gridlines.addAll(gridlinesMap.values());
+		gridlines.sort(new WB_IsoGridLine.HexLineSort());
+		i = 0;
+		for (WB_IsoGridLine line : gridlines) {
+			line.sort();
+			line.optimize();
+			if (i % 2 == 0)
+				line.reverse();
+			i++;
+		}
+		
 	}
 
 
@@ -216,11 +236,47 @@ int palette=params[0];
 							nhash = getCellHash(cell.getQ() + interHexNeighborQ[i], cell.getR() + interHexNeighborR[i]);
 							orientation = neighbor.getOrientation(interHexNeighbor[i]);
 							part = neighbor.getPart(interHexNeighbor[i]);
-							if (cell.getPart(i) == part && (nhash < hash || orientation == -1)) {
+							if (cell.getPart(i) == part && (nhash < hash ||  !neighbor.isOccupied(interHexNeighbor[i]))) {
 
 								z = neighbor.getZ(interHexNeighbor[i]);
-								colorIndex = neighbor.getPalette(interHexNeighbor[i]);
-								if (areSeparate(orientation, cell.getOrientation(i), colorIndex, cell.getPalette(i),
+								colorIndex = neighbor.getColor(interHexNeighbor[i]);
+								if (areSeparate(orientation, cell.getOrientation(i), colorIndex, cell.getColor(i),
+										cell.getZ(i), z)) {
+									addSegment(cell.getQ(), cell.getR(), interHexSegment[2 * i],
+											interHexSegment[2 * i + 1], linesMap);
+								}
+							}
+
+						}
+					}
+				}
+
+			}
+
+		}
+	}
+	
+	private void collectInterHexSegmentsGrid(Map<Long, WB_IsoGridLine> linesMap) {
+		WB_IsoGridCell neighbor;
+		int z, orientation, colorIndex, part;
+		long hash, nhash;
+		for (WB_IsoGridCell cell : cells.values()) {
+			hash = getCellHash(cell.getQ(), cell.getR());
+			for (int i = 0; i < 6; i++) {
+				if (cell.getOrientation(i) >= 0) {
+					if (interHexNeighbor[i] >= 0) {
+						neighbor = getNeighbor(cell.getQ(), cell.getR(), i);
+						if (neighbor == null) {
+
+						} else {
+							nhash = getCellHash(cell.getQ() + interHexNeighborQ[i], cell.getR() + interHexNeighborR[i]);
+							orientation = neighbor.getOrientation(interHexNeighbor[i]);
+							part = neighbor.getPart(interHexNeighbor[i]);
+							if (cell.getPart(i) == part && (nhash < hash ||  !neighbor.isOccupied(interHexNeighbor[i]))) {
+
+								z = neighbor.getZ(interHexNeighbor[i]);
+								colorIndex = neighbor.getColor(interHexNeighbor[i]);
+								if (z!=cell.getZ(i)&&!areSeparate(orientation, cell.getOrientation(i), colorIndex, cell.getColor(i),
 										cell.getZ(i), z)) {
 									addSegment(cell.getQ(), cell.getR(), interHexSegment[2 * i],
 											interHexSegment[2 * i + 1], linesMap);
@@ -251,7 +307,7 @@ int palette=params[0];
 					} else {
 						nhash = getCellHash(cell.getQ() + interHexNeighborQ[i], cell.getR() + interHexNeighborR[i]);
 						orientation = neighbor.getOrientation(interHexNeighbor[i]);
-						if (nhash < hash || orientation == -1) {
+						if (nhash < hash || !neighbor.isOccupied(interHexNeighbor[i])) {
 							part = neighbor.getPart(interHexNeighbor[i]);
 							if (cell.getPart(i) != part) {
 								addSegment(cell.getQ(), cell.getR(), interHexSegment[2 * i], interHexSegment[2 * i + 1],
@@ -266,6 +322,28 @@ int palette=params[0];
 		}
 	}
 
+	private void collectInterTriangleSegmentsGrid(Map<Long, WB_IsoGridLine> linesMap) {
+		int z, orientation, palette, part;
+		for (WB_IsoGridCell cell : cells.values()) {
+			for (int i = 0; i < 6; i++) {
+
+				orientation = cell.getOrientation(interTriangleNeighbor[i]);
+				z = cell.getZ(interTriangleNeighbor[i]);
+				palette = cell.getColor(interTriangleNeighbor[i]);
+				part = cell.getPart(interTriangleNeighbor[i]);
+				if (cell.getPart(i) != part) {
+
+				} else if (z!=cell.getZ(i)&&!areSeparate(orientation, cell.getOrientation(i), palette, cell.getColor(i), cell.getZ(i),
+						z)) {
+					addSegment(cell.getQ(), cell.getR(), interTriangleSegment[2 * i], interTriangleSegment[2 * i + 1],
+							linesMap);
+				}
+
+			}
+
+		}
+	}
+	
 	private void collectInterTriangleSegmentsInterior(Map<Long, WB_IsoGridLine> linesMap) {
 		int z, orientation, palette, part;
 		for (WB_IsoGridCell cell : cells.values()) {
@@ -273,11 +351,11 @@ int palette=params[0];
 
 				orientation = cell.getOrientation(interTriangleNeighbor[i]);
 				z = cell.getZ(interTriangleNeighbor[i]);
-				palette = cell.getPalette(interTriangleNeighbor[i]);
+				palette = cell.getColor(interTriangleNeighbor[i]);
 				part = cell.getPart(interTriangleNeighbor[i]);
 				if (cell.getPart(i) != part) {
 
-				} else if (areSeparate(orientation, cell.getOrientation(i), palette, cell.getPalette(i), cell.getZ(i),
+				} else if (areSeparate(orientation, cell.getOrientation(i), palette, cell.getColor(i), cell.getZ(i),
 						z)) {
 					addSegment(cell.getQ(), cell.getR(), interTriangleSegment[2 * i], interTriangleSegment[2 * i + 1],
 							linesMap);
@@ -350,8 +428,19 @@ int palette=params[0];
 		pg.point((float) (q / 6.0 * s60 * sx + ox), (float) ((r - q * c60) / 6.0 * sy + oy));
 	
 	}
+	
+	void circle(PApplet pg, double q, double r, double ox, double oy, double sx, double sy,double diameter) {
+		pg.ellipse((float) (q / 6.0 * s60 * sx + ox),
+				(float) ((r - q * c60) / 6.0 *sy + oy),(float)diameter,(float)diameter);
+		
+	}
 
 
+	void circle(PGraphics pg, double q, double r, double ox, double oy, double sx, double sy,double diameter) {
+		pg.ellipse((float) (q / 6.0 * s60 * sx + ox),
+				(float) ((r - q * c60) / 6.0 *sy + oy),(float)diameter,(float)diameter);
+		
+	}
 	void line(PApplet pg, double q1, double r1, double q2, double r2, double ox, double oy, double sx, double sy) {
 		pg.line((float) (q1 / 6.0 * s60 * sx + ox), (float) ((r1 - q1 * c60) / 6.0 * sy + oy),
 				(float) ((q2 / 6.0 * s60 * sx) + ox), (float) ((r2 - q2 * c60) / 6.0 * sy + oy));

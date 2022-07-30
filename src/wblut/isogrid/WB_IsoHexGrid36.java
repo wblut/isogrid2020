@@ -21,7 +21,7 @@ public class WB_IsoHexGrid36  extends WB_IsoHexGrid implements WB_IsoHexGridData
 
 	
 
-	public void addTriangle(int q, int r, int f, int s, int z, int orientation, int palette, int i, int j, int k) {
+	 void addTriangle(int q, int r, int f, int s, int z, int orientation, int colorSourceIndex, int i, int j, int k) {
 		long key = getCellHash(q, r);
 		WB_IsoGridCell cell = cells.get(key);
 
@@ -31,20 +31,23 @@ public class WB_IsoHexGrid36  extends WB_IsoHexGrid implements WB_IsoHexGridData
 
 		}
 
-		if (z > cell.z[s]) {
+		if (z > cell.getZ(s)) {
 			cell.orientation[s] = orientation;
 			cell.part[s] =-1;
 			cell.z[s] = z;
-			cell.triangle[s] = f;
-			cell.palette[s] = palette;
+			cell.occupied[s]=true;
+			cell.triangleIndex[s] = f;
+			cell.triangleColorSourceIndex[s] = colorSourceIndex;
 			cell.setI(s,i);
 			cell.setJ(s,j);
 			cell.setK(s,k);
 			cell.triangleUV[s] = triangleUVs[f];
 			cell.triangleUVDirections[s][0] = triangleUVDirections[f][0];
 			cell.triangleUVDirections[s][1] = triangleUVDirections[f][1];
-			cell.triangleUVOffsets[s][0] = cell.getIndices(s)[triangleUVDirections[f][0]]*triangleUVDirectionSigns[f][0]-(triangleUVDirectionSigns[f][0]<0?1:0);
-			cell.triangleUVOffsets[s][1] = cell.getIndices(s)[triangleUVDirections[f][1]]*triangleUVDirectionSigns[f][1]-(triangleUVDirectionSigns[f][1]<0?1:0);
+			cell.triangleUVDirectionSigns[s][0] = triangleUVDirectionSigns[f][0];
+			cell.triangleUVDirectionSigns[s][1] = triangleUVDirectionSigns[f][1];
+			cell.triangleUVOffsets[s][0] = cell.getIndices(s)[cell.triangleUVDirections[s][0]]*cell.triangleUVDirectionSigns[s][0]-(cell.triangleUVDirectionSigns[s][0]<0?1:0);
+			cell.triangleUVOffsets[s][1] = cell.getIndices(s)[cell.triangleUVDirections[s][1]]*cell.triangleUVDirectionSigns[s][1]-(cell.triangleUVDirectionSigns[s][1]<0?1:0);
 
 		}
 
@@ -114,10 +117,9 @@ public boolean isFull(int q, int r) {
 		case 0:
 			long key = getCellHash(q, r);
 			WB_IsoGridCell cell = cells.get(key);
-	       if(cell==null) return false;
-			for (int s = 0; s < 36; s++) {
-				if(cell.getOrientation(s)==-1) return false;
-			}
+	       if(cell==null || !cell.isFull()) return false;
+			
+	       
 			return true;
 			
 		case +1:
@@ -127,7 +129,7 @@ public boolean isFull(int q, int r) {
 				cell = cells.get(key);
 				if(cell==null) return false;
 				ns = mapTrianglesFromPosOne[s];
-				if(cell.getOrientation(ns)==-1) return false;
+				if(!cell.isOccupied(ns)) return false;
 			}
 		    return true;
 
@@ -137,7 +139,7 @@ public boolean isFull(int q, int r) {
 				cell = cells.get(key);
 				if(cell==null) return false;
 				ns = mapTrianglesFromNegOne[s];
-				if(cell.getOrientation(ns)==-1) return false;
+				if(!cell.isOccupied(ns)) return false;
 			}
 			return true;
 
@@ -193,7 +195,7 @@ public boolean isFull(int q, int r) {
 		for (WB_IsoGridCell cell : cells.values()) {
 			hash = getCellHash(cell.getQ(), cell.getR());
 			for (int i = 0; i < 36; i++) {
-				if (cell.getOrientation(i) >= 0) {
+				if (cell.isOccupied(i) ) {
 					if (interHexNeighbor[i] >= 0) {
 						neighbor = getNeighbor(cell.getQ(), cell.getR(), i);
 						if (neighbor == null) {
@@ -204,11 +206,11 @@ public boolean isFull(int q, int r) {
 							nhash = getCellHash(cell.getQ() + interHexNeighborQ[i], cell.getR() + interHexNeighborR[i]);
 							orientation = neighbor.getOrientation(interHexNeighbor[i]);
 							part = neighbor.getPart(interHexNeighbor[i]);
-							if (cell.getPart(i) == part && (nhash < hash || orientation == -1)) {
+							if (cell.getPart(i) == part && (nhash < hash || !neighbor.isOccupied(interHexNeighbor[i]))) {
 
 								z = neighbor.getZ(interHexNeighbor[i]);
-								palette = neighbor.getPalette(interHexNeighbor[i]);
-								if (areSeparate(orientation, cell.getOrientation(i), palette, cell.getPalette(i),
+								palette = neighbor.getColor(interHexNeighbor[i]);
+								if (areSeparate(orientation, cell.getOrientation(i), palette, cell.getColor(i),
 										cell.getZ(i), z)) {
 									addSegment(cell.getQ(), cell.getR(), interHexSegment[2 * i],
 											interHexSegment[2 * i + 1], linesMap);
@@ -231,7 +233,7 @@ public boolean isFull(int q, int r) {
 		for (WB_IsoGridCell cell : cells.values()) {
 			hash = getCellHash(cell.getQ(), cell.getR());
 			for (int i = 0; i < 36; i++) {
-				if (cell.getOrientation(i) >= 0) {
+				if (cell.isOccupied(i)) {
 					if (interHexNeighbor[i] >= 0) {
 						neighbor = getNeighbor(cell.getQ(), cell.getR(), i);
 						if (neighbor == null) {
@@ -240,7 +242,7 @@ public boolean isFull(int q, int r) {
 						} else {
 							nhash = getCellHash(cell.getQ() + interHexNeighborQ[i], cell.getR() + interHexNeighborR[i]);
 							orientation = neighbor.getOrientation(interHexNeighbor[i]);
-							if (nhash < hash || orientation == -1) {
+							if (nhash < hash || !neighbor.isOccupied(interHexNeighbor[i])) {
 								part = neighbor.getPart(interHexNeighbor[i]);
 								if (cell.getPart(i) != part) {
 									addSegment(cell.getQ(), cell.getR(), interHexSegment[2 * i],
@@ -265,11 +267,11 @@ public boolean isFull(int q, int r) {
 				if (interPieceNeighbor[i] > i) {
 					orientation = cell.getOrientation(interPieceNeighbor[i]);
 					z = cell.getZ(interPieceNeighbor[i]);
-					palette = cell.getPalette(interPieceNeighbor[i]);
+					palette = cell.getColor(interPieceNeighbor[i]);
 					part = cell.getPart(interPieceNeighbor[i]);
 					if (cell.getPart(i) != part) {
 
-					} else if (areSeparate(orientation, cell.getOrientation(i), palette, cell.getPalette(i),
+					} else if (areSeparate(orientation, cell.getOrientation(i), palette, cell.getColor(i),
 							cell.getZ(i), z)) {
 						addSegment(cell.getQ(), cell.getR(), interPieceSegment[2 * i],
 								interPieceSegment[2 * i + 1], linesMap);
@@ -307,11 +309,11 @@ public boolean isFull(int q, int r) {
 
 				orientation = cell.getOrientation(intraPieceNeighbor[i]);
 				z = cell.getZ(intraPieceNeighbor[i]);
-				palette = cell.getPalette(intraPieceNeighbor[i]);
+				palette = cell.getColor(intraPieceNeighbor[i]);
 				part = cell.getPart(intraPieceNeighbor[i]);
 				if (cell.getPart(i) != part) {
 					// outline
-				} else if (areSeparate(orientation, cell.getOrientation(i), palette, cell.getPalette(i), cell.getZ(i),
+				} else if (areSeparate(orientation, cell.getOrientation(i), palette, cell.getColor(i), cell.getZ(i),
 						z)) {
 					addSegment(cell.getQ(), cell.getR(), intraPieceSegment[2 * i], intraPieceSegment[2 * i + 1],
 							linesMap);
@@ -393,7 +395,17 @@ public boolean isFull(int q, int r) {
 		
 	}
 
-
+	void circle(PApplet pg, double q, double r, double ox, double oy, double sx, double sy,double diameter) {
+		pg.ellipse((float) (q / 6.0 * s60 * sx + ox),
+				(float) ((r - q * c60) / 6.0 *sy + oy),(float)diameter,(float)diameter);
+		
+	}
+	
+	void circle(PGraphics pg, double q, double r, double ox, double oy, double sx, double sy,double diameter) {
+		pg.ellipse((float) (q / 6.0 * s60 * sx + ox),
+				(float) ((r - q * c60) / 6.0 *sy + oy),(float)diameter,(float)diameter);
+		
+	}
 
 	void line(PApplet pg, double q1, double r1,double q2, double r2, double ox, double oy, double sx, double sy) {
 		pg.line((float) (q1 / 6.0 * s60 * sx + ox),
@@ -516,6 +528,8 @@ int computeOutCode(double x, double y, double xmin, double ymin, double xmax, do
 
 		return new int[] { q, r, t };
 	}
+	
+	
 	
 
 	

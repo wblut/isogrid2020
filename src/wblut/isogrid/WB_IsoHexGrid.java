@@ -7,6 +7,7 @@ import java.util.Map;
 
 import processing.core.PApplet;
 import processing.core.PGraphics;
+import wblut.cubegrid.WB_CubeGrid;
 
 
 public abstract class WB_IsoHexGrid {
@@ -15,8 +16,10 @@ public abstract class WB_IsoHexGrid {
 	Map<Long, WB_IsoGridCell> cells;
 	Map<Long, WB_IsoGridLine> linesMap;
 	Map<Long, WB_IsoGridLine> outlinesMap;
+	Map<Long, WB_IsoGridLine> gridlinesMap;
 	List<WB_IsoGridLine> lines;
 	List<WB_IsoGridLine> outlines;
+	List<WB_IsoGridLine> gridlines;
 	
 	WB_IsoHexGrid() {
 		cells = new HashMap<Long, WB_IsoGridCell>();
@@ -24,6 +27,8 @@ public abstract class WB_IsoHexGrid {
 		lines = new ArrayList<WB_IsoGridLine>();
 		outlinesMap = new HashMap<Long, WB_IsoGridLine>();
 		outlines = new ArrayList<WB_IsoGridLine>();
+		gridlinesMap = new HashMap<Long, WB_IsoGridLine>();
+		gridlines = new ArrayList<WB_IsoGridLine>();
 
 	}
 	
@@ -53,9 +58,10 @@ public abstract class WB_IsoHexGrid {
 		cells.clear();
 		linesMap.clear();
 		outlinesMap.clear();
+		gridlinesMap.clear();
 	}
 	
-	public abstract void addTriangle(int q, int r, int f, int s,  int z, int orientation,int palette, int i, int j,
+	abstract void addTriangle(int q, int r, int f, int s,  int z, int orientation,int colorSourceIndex, int i, int j,
 			int k) ;
 	
 	public abstract boolean isFull(int q, int r) ;
@@ -68,6 +74,11 @@ public abstract class WB_IsoHexGrid {
 		cellsList.sort(new WB_IsoGridCell.HexCellSort());
 		return cellsList;
 	}
+	
+	final public WB_IsoGridCell get(long key) {
+
+		return cells.get(key);
+	}
 
 	public abstract void collectLines() ;
 
@@ -75,7 +86,7 @@ public abstract class WB_IsoHexGrid {
 		int maxRegion = -1;
 		for (WB_IsoGridCell cell : cells.values()) {
 			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-				if (cell.getOrientation(f) != -1 && cell.getPart(f)!=-1) {
+				if (cell.isOccupied(f)  && cell.getPart(f)!=-1) {
 					cell.region[f] =( cell.getNumberOfTriangles()==6?3:10) * cell.getPart(f) + cell.getOrientation(f);
 					maxRegion = Math.max(cell.region[f], maxRegion);
 				} else {
@@ -150,25 +161,26 @@ public abstract class WB_IsoHexGrid {
 	final void setParts(WB_CubeGrid cubes) {
 		for (WB_IsoGridCell cell : cells.values()) {
 			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
-				if (cell.getOrientation(f) > -1)
+				if (cell.isOccupied(f))
 					cell.part[f] = cubes.getPart(cell.getI(f) ,cell.getJ(f),cell.getK(f));
 			}
 		}
 
 	}
 	
-	final void setVisibility(WB_CubeGrid cubes) {
+	final public void setExposure(WB_CubeGrid cubes) {
 		for (WB_IsoGridCell cell : cells.values()) {
 			for (int f = 0; f < cell.getNumberOfTriangles(); f++) {
 				
-				if (cell.getOrientation(f) > -1)
+				if (cell.isOccupied(f))
 					for(int d=0;d<6;d++) {
-					cell.visibility[f][d] = cubes.getVisibility(cell.getI(f) ,cell.getJ(f),cell.getK(f),d);
+					cell.exposure[f][d] = cubes.getExposure(cell.getI(f) ,cell.getJ(f),cell.getK(f),d);
 					}
 			}
 		}
 
 	}
+	
 
 	final static boolean areSeparate(int orientation1, int orientation2, int palette1, int palette2, int z1, int z2) {
 		return orientation1 != orientation2 || palette1 != palette2 || Math.abs(z1 - z2) > 1;
@@ -196,6 +208,8 @@ public abstract class WB_IsoHexGrid {
 	abstract void line(PGraphics pg, double q1, double r1,double q2, double r2, double ox, double oy, double sx, double sy) ;
 	
 	abstract void point(PGraphics pg, double q, double r, double ox, double oy, double sx, double sy);
+	
+	abstract void circle(PGraphics pg, double q, double r, double ox, double oy, double sx, double sy, double diameter);
 	
 	abstract void line(
 			PApplet pg, double q1, double r1,double q2, double r2, double ox, double oy, double sx, double sy) ;

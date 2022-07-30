@@ -10,13 +10,23 @@ public class WB_IsoGridLine {
 	private int lineValue;
 	private List<WB_IsoGridSegment> segments;
 	
-	protected WB_IsoGridLine(int type, int value) {
+	public WB_IsoGridLine(int type, int value) {
 		this.type = type;
 		this.lineValue = value;
 		segments = new ArrayList<WB_IsoGridSegment>();
 	}
 	
-	protected void add(WB_IsoGridSegment segment) {
+	public WB_IsoGridLine(WB_IsoGridLine line) {
+		this.type = line.type;
+		this.lineValue = line.lineValue;
+		segments = new ArrayList<WB_IsoGridSegment>();
+		for(WB_IsoGridSegment seg:line.segments) {
+			segments.add(new WB_IsoGridSegment(seg));
+		}
+	}
+	
+	
+	public void add(WB_IsoGridSegment segment) {
 		if(segment.getType()==type && segment.getLineValue()==lineValue) {
 			segments.add(segment);
 		}else {
@@ -26,11 +36,11 @@ public class WB_IsoGridLine {
 	
 
 	
-	protected void sort() {
+	public void sort() {
 		segments.sort(new WB_IsoGridSegment.HexSegmentSort());
 	}
 	
-	protected void optimize() {
+	public void optimize() {
 		 List<WB_IsoGridSegment> newSegments=new ArrayList<WB_IsoGridSegment>();
 		 WB_IsoGridSegment segi,segj;
 		 for(int i=0;i<segments.size();) {
@@ -85,7 +95,7 @@ public class WB_IsoGridLine {
 	
 
 	
-	static protected class HexLineSort implements Comparator<WB_IsoGridLine>{
+	public static class HexLineSort implements Comparator<WB_IsoGridLine>{
 		@Override
 		public int compare(WB_IsoGridLine arg0, WB_IsoGridLine arg1) {
 			if(arg0.type<arg1.type) {
