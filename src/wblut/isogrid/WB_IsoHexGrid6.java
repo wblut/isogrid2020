@@ -6,8 +6,9 @@ import java.util.Map;
 
 import processing.core.PApplet;
 import processing.core.PGraphics;
+import wblut.hexgrid.WB_HexGridData6;
 
-public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_IsoHexGridData6 {
+public class WB_IsoHexGrid6 extends WB_IsoHexGrid implements WB_HexGridData6 {
 
 	public WB_IsoHexGrid6() {
 		super();
@@ -167,7 +168,7 @@ int palette=params[0];
 	}
 
 
-	public void collectLines() {
+	public void collectLines(boolean optimize) {
 
 		outlinesMap.clear();
 		collectInterHexSegmentsOutline(outlinesMap);
@@ -179,9 +180,9 @@ int palette=params[0];
 		int i = 0;
 		for (WB_IsoGridLine line : outlines) {
 			line.sort();
-			line.optimize();
+			if(optimize) { line.optimize();
 			if (i % 2 == 0)
-				line.reverse();
+				line.reverse();}
 			i++;
 		}
 
@@ -195,9 +196,9 @@ int palette=params[0];
 		i = 0;
 		for (WB_IsoGridLine line : lines) {
 			line.sort();
-			line.optimize();
+			if(optimize) { line.optimize();
 			if (i % 2 == 0)
-				line.reverse();
+				line.reverse();}
 			i++;
 		}
 		
@@ -211,9 +212,9 @@ int palette=params[0];
 		i = 0;
 		for (WB_IsoGridLine line : gridlines) {
 			line.sort();
-			line.optimize();
+			if(optimize) { line.optimize();
 			if (i % 2 == 0)
-				line.reverse();
+				line.reverse();}
 			i++;
 		}
 		
@@ -401,149 +402,6 @@ int palette=params[0];
 	}
 
 
-	void triVertex(PGraphics pg, int t, int i, double ox, double oy, double sx, double sy) {
-		vertex(pg, ox + offsets[2 * triangleVertices[t][i]] * sx, oy + offsets[2 * triangleVertices[t][i] + 1] * sy);
-
-	}
-
-	void triVertex(PGraphics pg, int t, int i, double ox, double oy, double sx, double sy, double u, double v) {
-		vertex(pg, ox + offsets[2 * triangleVertices[t][i]] * sx, oy + offsets[2 * triangleVertices[t][i] + 1] * sy, u,
-				v);
-
-	}
-
-
-	void line(PGraphics pg, double q1, double r1, double q2, double r2, double ox, double oy, double sx, double sy) {
-		pg.line((float) (q1 / 6.0 * s60 * sx + ox), (float) ((r1 - q1 * c60) / 6.0 * sy + oy),
-				(float) ((q2 / 6.0 * s60 * sx) + ox), (float) ((r2 - q2 * c60) / 6.0 * sy + oy));
-
-	}
-
-	void point(PGraphics pg, double q, double r, double ox, double oy, double sx, double sy) {
-		pg.point((float) (q / 6.0 * s60 * sx + ox), (float) ((r - q * c60) / 6.0 * sy + oy));
-
-	}
-	
-	void point(PApplet pg, double q, double r, double ox, double oy, double sx, double sy) {
-		pg.point((float) (q / 6.0 * s60 * sx + ox), (float) ((r - q * c60) / 6.0 * sy + oy));
-	
-	}
-	
-	void circle(PApplet pg, double q, double r, double ox, double oy, double sx, double sy,double diameter) {
-		pg.ellipse((float) (q / 6.0 * s60 * sx + ox),
-				(float) ((r - q * c60) / 6.0 *sy + oy),(float)diameter,(float)diameter);
-		
-	}
-
-
-	void circle(PGraphics pg, double q, double r, double ox, double oy, double sx, double sy,double diameter) {
-		pg.ellipse((float) (q / 6.0 * s60 * sx + ox),
-				(float) ((r - q * c60) / 6.0 *sy + oy),(float)diameter,(float)diameter);
-		
-	}
-	void line(PApplet pg, double q1, double r1, double q2, double r2, double ox, double oy, double sx, double sy) {
-		pg.line((float) (q1 / 6.0 * s60 * sx + ox), (float) ((r1 - q1 * c60) / 6.0 * sy + oy),
-				(float) ((q2 / 6.0 * s60 * sx) + ox), (float) ((r2 - q2 * c60) / 6.0 * sy + oy));
-
-	}
-	
-	void clippedLine(PApplet pg, double q1, double r1, double q2, double r2, double ox, double oy, double sx, double sy, double xmin, double ymin, double xmax, double ymax) {
-			double x0=q1 / 6.0 * s60 * sx + ox;
-			double y0=(r1 - q1 * c60) / 6.0 * sy + oy;
-			double x1=(q2 / 6.0 * s60 * sx) + ox;
-			double y1=(r2 - q2 * c60) / 6.0 * sy + oy;
-			
-			int outcode0 = computeOutCode(x0, y0, xmin, ymin, xmax, ymax);
-			int outcode1 = computeOutCode(x1, y1, xmin, ymin, xmax, ymax);
-			boolean accept = false;
-
-			while (true) {
-				if ((outcode0 | outcode1)==0) {
-					// bitwise OR is 0: both points inside window; trivially accept and exit loop
-					accept = true;
-					break;
-				} else if ((outcode0 & outcode1)>0) {
-					// bitwise AND is not 0: both points share an outside zone (LEFT, RIGHT, TOP,
-					// or BOTTOM), so both must be outside window; exit loop (accept is false)
-					break;
-				} else {
-					// failed both tests, so calculate the line segment to clip
-					// from an outside point to an intersection with clip edge
-					double x, y;
-					x=0.0;
-					y=0.0;
-
-					// At least one endpoint is outside the clip rectangle; pick it.
-					int outcodeOut = outcode1 > outcode0 ? outcode1 : outcode0;
-
-					// Now find the intersection point;
-					// use formulas:
-					//   slope = (y1 - y0) / (x1 - x0)
-					//   x = x0 + (1 / slope) * (ym - y0), where ym is ymin or ymax
-					//   y = y0 + slope * (xm - x0), where xm is xmin or xmax
-					// No need to worry about divide-by-zero because, in each case, the
-					// outcode bit being tested guarantees the denominator is non-zero
-					if ((outcodeOut & TOP)>0) {           // point is above the clip window
-						x = x0 + (x1 - x0) * (ymax - y0) / (y1 - y0);
-						y = ymax;
-					} else if ((outcodeOut & BOTTOM)>0) { // point is below the clip window
-						x = x0 + (x1 - x0) * (ymin - y0) / (y1 - y0);
-						y = ymin;
-					} else if ((outcodeOut & RIGHT)>0) {  // point is to the right of clip window
-						y = y0 + (y1 - y0) * (xmax - x0) / (x1 - x0);
-						x = xmax;
-					} else if ((outcodeOut & LEFT)>0) {   // point is to the left of clip window
-						y = y0 + (y1 - y0) * (xmin - x0) / (x1 - x0);
-						x = xmin;
-					}
-
-					// Now we move outside point to intersection point to clip
-					// and get ready for next pass.
-					if (outcodeOut == outcode0) {
-						x0 = x;
-						y0 = y;
-						outcode0 = computeOutCode(x0, y0, xmin, ymin, xmax, ymax);
-					} else {
-						x1 = x;
-						y1 = y;
-						outcode1 = computeOutCode(x1, y1, xmin, ymin, xmax, ymax);
-					}
-				}
-			}
-			if(accept) {
-				pg.line((float) x0, (float) y0,
-						(float) x1, (float) y1);
-				
-			}
-			
-	
-	}
-	
-	int INSIDE = 0; // 0000
-	int LEFT = 1;   // 0001
-	int RIGHT = 2;  // 0010
-	int BOTTOM = 4; // 0100
-	int TOP = 8;    // 1000
-
-	// Compute the bit code for a point (x, y) using the clip
-	// bounded diagonally by (xmin, ymin), and (xmax, ymax)
-	// ASSUME THAT xmax, xmin, ymax and ymin are global constants.
-	int computeOutCode(double x, double y, double xmin, double ymin, double xmax, double ymax)
-	{
-		int code;
-		code = INSIDE;          // initialised as being inside of [[clip window]]
-		if (x < xmin)           // to the left of clip window
-			code |= LEFT;
-		else if (x > xmax)      // to the right of clip window
-			code |= RIGHT;
-		if (y < ymin)           // below the clip window
-			code |= BOTTOM;
-		else if (y > ymax)      // above the clip window
-			code |= TOP;
-		return code;
-	}
-	
-	
 	public double[] getGridCoordinates(double q, double r, double ox, double oy, double sx, double sy) {
 		return new double[] { q * s60 * sx + ox, (r - q * c60) * sy + oy };
 	}
@@ -559,6 +417,20 @@ int palette=params[0];
 
 		return new int[] { q, r, t };
 
+	}
+
+
+	@Override
+	void getHexCoordinates(int i, double ox, double oy, double sx, double sy, double[] into) {
+		into[0]=ox + offsets[2 * i] * sx;
+		into[1]= oy + offsets[2 * i + 1] * sy;
+	}
+
+
+	@Override
+	void getTriangleCoordinates(int t, int i, double ox, double oy, double sx, double sy, double[] into) {
+		into[0]= ox + offsets[2 * triangleVertices[t][i]] * sx;
+		into[1]=oy + offsets[2 * triangleVertices[t][i] + 1] * sy;
 	}
 
 

@@ -13,7 +13,6 @@ import wblut.isogrid.color.WB_IsoColor;
 public class WB_IsoSystem36 extends WB_IsoSystem {
 
 	boolean DUAL;
-
 	public WB_IsoSystem36(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
 			boolean full, PApplet home) {
 		super(L, I, J, K, centerX, centerY, colors, seed, full, home);

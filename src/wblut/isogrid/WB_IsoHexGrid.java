@@ -80,7 +80,7 @@ public abstract class WB_IsoHexGrid {
 		return cells.get(key);
 	}
 
-	public abstract void collectLines() ;
+	public abstract void collectLines(boolean optimize) ;
 
 	final public void collectRegions() {
 		int maxRegion = -1;
@@ -188,38 +188,9 @@ public abstract class WB_IsoHexGrid {
 
 
 	
-	final void hexVertex(PGraphics pg,int i, double ox, double oy, double sx, double sy) {
-		vertex(pg, ox + offsets[2 * i] * sx, oy + offsets[2 * i + 1] * sy);
-		
-	}
-	
-	abstract void triVertex(PGraphics pg,int t,int i, double ox, double oy, double sx, double sy) ;
-	
-	abstract void triVertex(PGraphics pg,int t,int i, double ox, double oy, double sx, double sy,double u, double v) ;
-
-	final void vertex(PGraphics pg, final double px, double py) {
-		pg.vertex((float) px, (float) py);
-	}
-
-	final void vertex(PGraphics pg, final double px, double py, double u, double v) {
-		pg.vertex((float) px, (float) py, (float) u, (float) v);
-	}
-	
-	abstract void line(PGraphics pg, double q1, double r1,double q2, double r2, double ox, double oy, double sx, double sy) ;
-	
-	abstract void point(PGraphics pg, double q, double r, double ox, double oy, double sx, double sy);
-	
-	abstract void circle(PGraphics pg, double q, double r, double ox, double oy, double sx, double sy, double diameter);
-	
-	abstract void line(
-			PApplet pg, double q1, double r1,double q2, double r2, double ox, double oy, double sx, double sy) ;
-	
-	abstract void clippedLine(
-			PApplet pg, double q1, double r1,double q2, double r2, double ox, double oy, double sx, double sy, double xmin, double ymin, double xmax, double ymax) ;
-	
-	abstract void point(PApplet pg, double q, double r, double ox, double oy, double sx, double sy);
-
 	abstract double[] getGridCoordinates(double q, double r, double ox, double oy, double sx, double sy) ;
+	abstract void getHexCoordinates(int i,double ox, double oy, double sx, double sy, double[] into) ;
+	abstract void getTriangleCoordinates(int t,int i,double ox, double oy, double sx, double sy, double[] into) ;
 
 	abstract int[] getTriangleAtGridCoordinates(double x, double y, double ox, double oy, double sx, double sy);
 	

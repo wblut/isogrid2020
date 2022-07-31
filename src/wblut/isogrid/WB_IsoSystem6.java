@@ -10,6 +10,8 @@ import wblut.isogrid.color.WB_IsoColor;
 
 public class WB_IsoSystem6 extends WB_IsoSystem {
 
+	
+
 	public WB_IsoSystem6(double L, int I, int J, int K, double centerX, double centerY, int[] colors, int seed,
 			boolean full, PApplet home) {
 		super(L, I, J, K, centerX, centerY, colors, seed, full, home);
@@ -422,5 +424,7 @@ public class WB_IsoSystem6 extends WB_IsoSystem {
 		}
 		return bakedGrid;
 	}
+	
+	
 
 }
