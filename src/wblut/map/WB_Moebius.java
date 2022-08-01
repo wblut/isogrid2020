@@ -6,10 +6,10 @@ import processing.core.PApplet;
 import wblut.isogrid.WB_IsoSystem6;
 
 public class WB_Moebius implements WB_Map {
-	double ar,ai,br,bi,cr,ci,dr,di, offsetr, offseti, scale;
+	double ar,ai,br,bi,cr,ci,dr,di,  scale;
 	
 	
-	public WB_Moebius(double ar, double ai, double br, double bi, double cr, double ci, double dr, double di, double offsetr, double offseti, double scale) {
+	public WB_Moebius(double ar, double ai, double br, double bi, double cr, double ci, double dr, double di, double scale) {
 		super();
 	
 		this.ar = ar;
@@ -20,30 +20,9 @@ public class WB_Moebius implements WB_Map {
 		this.ci = ci;
 		this.dr = dr;
 		this.di = di;
-		this.offsetr=offsetr;
-		this.offseti=offseti;
 		this.scale=scale;
 	}
 	
-
-	public double getOffsetr() {
-		return offsetr;
-	}
-
-
-	public void setOffsetr(double offsetr) {
-		this.offsetr = offsetr;
-	}
-
-
-	public double getOffseti() {
-		return offseti;
-	}
-
-
-	public void setOffseti(double offseti) {
-		this.offseti = offseti;
-	}
 
 
 	public double getAi() {
@@ -98,8 +77,6 @@ public class WB_Moebius implements WB_Map {
 
 	@Override
 	public void map(double zr, double zi,  double[]into) {
-		zr-=offsetr;
-		zi-=offseti;
 		zr/=scale;
 	
 		zi/=scale;
@@ -119,8 +96,8 @@ public class WB_Moebius implements WB_Map {
 		resulti=(nomi*denomr-nomr*denomi)/denom;
 		
 		
-		into[0]=scale*resultr+offsetr;
-		into[1]=scale*resulti+offseti;
+		into[0]=scale*resultr;
+		into[1]=scale*resulti;
 	}
 
 	public void setAll(double ar, double ai, double br, double bi, double cr, double ci, double dr, double di) {
