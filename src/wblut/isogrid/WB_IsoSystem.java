@@ -2480,7 +2480,27 @@ public abstract class WB_IsoSystem {
 		map();
 
 	}
+	
+	public void randomWalk(int size, int step, int starti, int startj, int startk, int steps) {
+		int si = starti;
+		int sj = startj;
+		int sk = startk;
+		int[] dir;
+		for (int ss=0;ss<steps;ss++) {
+			dir = randomDirection();
+			for (int s = 0; s < step; s++) {
+				set(si, sj, sk, size, size, size);
+				si += size * dir[0];
+				sj += size * dir[1];
+				sk += size * dir[2];
+			}
+		}
 
+		map();
+
+	}
+
+	
 	public void refresh() {
 		System.out.println("Mapping...");
 		mapVoxelsToHexGrid();
