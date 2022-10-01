@@ -2610,6 +2610,75 @@ public abstract class WB_IsoSystem {
 		map();
 	}
 
+
+	public void repeatAdd(float chance, int si, int sj, int sk, int di, int dj, int dk) {
+		DEFER = true;
+		boolean[][][] pattern = new boolean[di][dj][dk];
+		for (int i = 0; i < di; i++) {
+			for (int j = 0; j < dj; j++) {
+				for (int k = 0; k < dk; k++) {
+					pattern[i][j][k] = get(si + i, sj + j, sk + k);
+
+				}
+			}
+		}
+
+		for (int i = minI; i < maxI; i += di) {
+			for (int j = minJ; j < maxJ; j += dj) {
+				for (int k = minK; k < maxK; k += dk) {
+					if (random(1.0) < chance) {
+						for (int ii = 0; ii < di; ii++) {
+							for (int jj = 0; jj < dj; jj++) {
+								for (int kk = 0; kk < dk; kk++) {
+									if (pattern[ii][jj][kk]) {
+										set(i + ii, j + jj, k + kk);
+									} 
+
+								}
+							}
+						}
+					}
+
+				}
+			}
+		}
+		DEFER = false;
+		map();
+	}
+
+	public void repeatAdd(int si, int sj, int sk, int di, int dj, int dk) {
+		DEFER = true;
+		boolean[][][] pattern = new boolean[di][dj][dk];
+		for (int i = 0; i < di; i++) {
+			for (int j = 0; j < dj; j++) {
+				for (int k = 0; k < dk; k++) {
+					pattern[i][j][k] = get(si + i, sj + j, sk + k);
+
+				}
+			}
+		}
+
+		for (int i = minI; i < maxI; i += di) {
+			for (int j = minJ; j < maxJ; j += dj) {
+				for (int k = minK; k < maxK; k += dk) {
+					for (int ii = 0; ii < di; ii++) {
+						for (int jj = 0; jj < dj; jj++) {
+							for (int kk = 0; kk < dk; kk++) {
+								if (pattern[ii][jj][kk]) {
+									set(i + ii, j + jj, k + kk);
+								} 
+
+							}
+						}
+					}
+
+				}
+			}
+		}
+		DEFER = false;
+		map();
+	}
+	
 	public void resetRange() {
 		this.minI = 0;
 		this.minJ = 0;
